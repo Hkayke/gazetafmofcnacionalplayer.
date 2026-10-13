@@ -1,16 +1,13 @@
 {
-  "name": "gazeta-fm-nacional-player",
-  "version": "1.1.0",
+  "name": "gazeta-fm-autodj",
+  "version": "1.0.0",
+  "description": "Radio Gazeta FM com AutoDJ integrado",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "engines": {
-    "node": ">=18"
-  },
   "dependencies": {
-    "express": "^4.21.2",
-    "socket.io": "^4.8.1",
-    "multer": "^1.4.5-lts.2"
+    "express": "^4.19.2",
+    "mp3-duration": "^1.1.0"
   }
 }
