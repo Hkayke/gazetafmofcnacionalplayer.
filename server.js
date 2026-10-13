@@ -1,35 +1,102 @@
-const express=require('express'),http=require('http'),path=require('path');
-const {Server}=require('socket.io');
-const multer=require('multer');
-const fs=require('fs');
-const uploadsDir=path.join(__dirname,'public','uploads');fs.mkdirSync(uploadsDir,{recursive:true});
-const upload=multer({dest:uploadsDir,limits:{fileSize:25*1024*1024}});
-const app=express(),server=http.createServer(app),io=new Server(server);
-const PORT=process.env.PORT||3000, PASSWORD=process.env.LOCUTOR_PASSWORD||'troque-esta-senha';
-app.use(express.static(path.join(__dirname,'public')));
-app.get('/health',(_,r)=>r.json({ok:true}));
-app.post('/api/upload-song',upload.single('song'),(req,res)=>{if(!req.file)return res.status(400).json({error:'Selecione um arquivo.'});const ext=path.extname(req.file.originalname).slice(0,10);const name=req.file.filename+ext;fs.renameSync(req.file.path,path.join(uploadsDir,name));const item={id:name,name:req.file.originalname,url:'/uploads/'+name,by:String(req.body.name||'Ouvinte').slice(0,40),at:Date.now()};requestHistory.push(item);requestHistory=requestHistory.slice(-100);io.emit('song-request',item);res.json({ok:true,item});});
-app.post('/api/upload-schedule',upload.single('image'),(req,res)=>{if(!req.file)return res.status(400).json({error:'Selecione uma imagem.'});if(req.body.password!==PASSWORD){fs.unlinkSync(req.file.path);return res.status(403).json({error:'Senha incorreta.'});}const ext=path.extname(req.file.originalname).slice(0,10)||'.jpg';const name='programacao-'+Date.now()+ext;fs.renameSync(req.file.path,path.join(uploadsDir,name));const item={url:'/uploads/'+name,name:req.file.originalname,at:Date.now()};scheduleImage=item;io.emit('schedule-image',item);res.json({ok:true,item});});
-let scheduleImage=null, chatHistory=[], requestHistory=[];app.get('/api/public-data',(_,res)=>res.json({scheduleImage,chatHistory:chatHistory.slice(-60),requestHistory:requestHistory.slice(-30)}));
-let hostId=null,hostName='',live=false; const listeners=new Set();
-io.on('connection',s=>{
- s.emit('radio-state',{live,hostName}); if(scheduleImage)s.emit('schedule-image',scheduleImage);
- s.on('host-login',({password,name})=>{
-  if(password!==PASSWORD)return s.emit('host-login-result',{ok:false,message:'Senha incorreta.'});
-  if(hostId&&hostId!==s.id)return s.emit('host-login-result',{ok:false,message:'Já existe um locutor conectado.'});
-  hostId=s.id;hostName=String(name||'Locutor').slice(0,40);s.emit('host-login-result',{ok:true});io.emit('radio-state',{live,hostName});
- });
- s.on('go-live',()=>{if(s.id===hostId){live=true;io.emit('radio-state',{live,hostName}); for(const listenerId of listeners) io.to(hostId).emit('listener-wants-stream',{listenerId});}});
- s.on('go-offline',()=>{if(s.id===hostId){live=false;io.emit('radio-state',{live,hostName});}});
- s.on('listener-join',()=>{listeners.add(s.id); if(live&&hostId)io.to(hostId).emit('listener-wants-stream',{listenerId:s.id});else s.emit('stream-unavailable');});
- s.on('webrtc-offer',d=>{if(s.id===hostId)io.to(d.target).emit('webrtc-offer',{from:s.id,offer:d.offer});});
- s.on('webrtc-answer',d=>io.to(d.target).emit('webrtc-answer',{from:s.id,answer:d.answer}));
- s.on('webrtc-ice',d=>io.to(d.target).emit('webrtc-ice',{from:s.id,candidate:d.candidate}));
- s.on('chat-message',d=>{const m={name:String(d.name||'Ouvinte').slice(0,32),text:String(d.text||'').trim().slice(0,300),at:Date.now()};if(!m.text)return;chatHistory.push(m);chatHistory=chatHistory.slice(-100);io.emit('chat-message',m);});
- s.on('song-request',d=>{const m={id:String(d.id||'').slice(0,100),name:String(d.name||'Música').slice(0,180),url:String(d.url||'').startsWith('/uploads/')?String(d.url):'',by:String(d.by||'Ouvinte').slice(0,40),at:Date.now()};if(!m.url)return;requestHistory.push(m);requestHistory=requestHistory.slice(-100);io.emit('song-request',m);});
- s.on('delete-song-request',d=>{if(s.id!==hostId)return;requestHistory=requestHistory.filter(x=>x.id!==d.id);io.emit('song-request-removed',{id:d.id});});
- s.on('schedule-image',d=>{if(s.id===hostId&&scheduleImage)io.emit('schedule-image',scheduleImage);});
- s.on('now-playing',d=>{if(s.id===hostId)io.emit('now-playing',{title:String(d.title||'GAZETA FM NACIONAL PLAYER').slice(0,100)});});
- s.on('disconnect',()=>{listeners.delete(s.id); if(s.id===hostId){hostId=null;hostName='';live=false;io.emit('radio-state',{live,hostName});}});
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const mp3Duration = require('mp3-duration');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Pasta onde ficam os seus arquivos estáticos e as músicas
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Lista global de ouvintes conectados
+let ouuintes = [];
+
+// Lista de arquivos de música .mp3
+let musicas = [];
+let musicaAtualIndex = 0;
+
+// Carrega todas as músicas .mp3 da pasta public
+function carregarMusicas() {
+    const pastaPublic = path.join(__dirname, 'public');
+    try {
+        const arquivos = fs.readdirSync(pastaPublic);
+        musicas = arquivos.filter(arq => arq.endsWith('.mp3'));
+        console.log(`[AutoDJ] ${musicas.length} músicas encontradas.`);
+    } catch (err) {
+        console.error("[Erro] Não foi possível ler a pasta public:", err);
+    }
+}
+
+// Inicia o motor do AutoDJ em loop infinito 24h
+async function iniciarAutoDJ() {
+    if (musicas.length === 0) {
+        console.log("[AutoDJ] Nenhuma música encontrada. Aguardando arquivos...");
+        setTimeout(carregarMusicas, 5000);
+        return;
+    }
+
+    const nomeMusica = musicas[musicaAtualIndex];
+    const caminhoMusica = path.join(__dirname, 'public', nomeMusica);
+
+    console.log(`[AutoDJ] Tocando agora: ${nomeMusica}`);
+
+    try {
+        // Calcula a duração exata da música em milissegundos
+        mp3Duration(caminhoMusica, (err, duration) => {
+            let tempoDuracao = 180000; // Tempo padrão de 3 minutos caso dê erro
+            if (!err && duration) {
+                tempoDuracao = duration * 1000;
+            }
+
+            // Transmite os blocos de dados da música atual para todos os ouvintes conectados
+            const streamLeitura = fs.createReadStream(caminhoMusica);
+            
+            streamLeitura.on('data', (chunk) => {
+                ouuintes.forEach(res => {
+                    try { res.write(chunk); } catch (e) {}
+                });
+            });
+
+            streamLeitura.on('end', () => {
+                // Quando a música termina, avança para a próxima da lista
+                musicaAtualIndex = (musicaAtualIndex + 1) % musicas.length;
+                iniciarAutoDJ();
+            });
+        });
+    } catch (e) {
+        console.error("[AutoDJ] Erro ao reproduzir arquivo. Pulando...", e);
+        musicaAtualIndex = (musicaAtualIndex + 1) % musicas.length;
+        setTimeout(iniciarAutoDJ, 1000);
+    }
+}
+
+// Rota onde o player do seu site vai se conectar para ouvir a rádio
+app.get('/radio.mp3', (req, res) => {
+    res.writeHead(200, {
+        'Content-Type': 'audio/mpeg',
+        'Transfer-Encoding': 'chunked',
+        'Connection': 'keep-alive',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+    });
+
+    // Adiciona o ouvinte na lista de transmissão ativa
+    ouuintes.push(res);
+
+    // Remove da lista se o ouvinte fechar o site ou pausar
+    req.on('close', () => {
+        ouuintes = ouuintes.filter(cliente => cliente !== res);
+    });
 });
-server.listen(PORT,'0.0.0.0',()=>console.log('Gazeta FM Nacional Player na porta '+PORT));
+
+// Inicialização do servidor
+carregarMusicas();
+if (musicas.length > 0) {
+    iniciarAutoDJ();
+}
+
+app.listen(PORT, () => {
+    console.log(`[Servidor] Rodando com sucesso na porta ${PORT}`);
+});
