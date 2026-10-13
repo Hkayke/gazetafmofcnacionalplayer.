@@ -1,30 +1,65 @@
-// Configurações básicas de conexão do cliente da rádio
+// Conexão original via Socket.io com o servidor
 const socket = io();
 
-// Elementos da interface do player e do painel
+// Elementos principais do site
 const botaoPlay = document.getElementById('ouvirRadio') || document.querySelector('button');
 const audioPlayer = document.getElementById('audioAudio') || new Audio();
-const linkPainel = document.querySelector('a[href="#painel-do-locutor"]') || document.querySelector('.painel-link') || Array.from(document.querySelectorAll('a')).find(el => el.textContent.includes('Painel'));
-const areaRestrita = document.getElementById('painel-do-locutor') || document.querySelector('.area-restrita');
-const botaoFecharPainel = document.querySelector('.area-restrita .close') || document.querySelector('#painel-do-locutor .close') || document.querySelector('.area-restrita button');
 
 let transmitindo = false;
 
-// Função para abrir e fechar a caixinha do Painel do Locutor (Sua função original restaurada)
-if (linkPainel && areaRestrita) {
-    linkPainel.addEventListener('click', (e) => {
-        e.preventDefault();
-        areaRestrita.style.display = 'block'; // Mostra a tela de login do locutor
-    });
+// FUNÇÃO ORIGINAL DO SEU SITE PARA ABRIR O PAINEL DO LOCUTOR
+function abrirPainelLocutor(evento) {
+    if (evento) evento.preventDefault();
+    
+    // Procura as IDs e Classes originais do seu projeto (Área Restrita / Janela Modal)
+    const modalAreaRestrita = document.getElementById('painel-do-locutor') || document.querySelector('.area-restrita') || document.querySelector('.modal');
+    
+    if (modalAreaRestrita) {
+        modalAreaRestrita.style.display = 'flex';
+        modalAreaRestrita.style.visibility = 'visible';
+        modalAreaRestrita.classList.add('active');
+        console.log("[Painel] Janela de login aberta com sucesso.");
+    } else {
+        // Fallback caso a ID mude na renderização
+        const secaoPainel = document.querySelector('section h2');
+        if (secaoPainel && secaoPainel.textContent.includes('Painel')) {
+            secaoPainel.parentElement.style.display = 'block';
+        }
+    }
 }
 
-if (botaoFecharPainel && areaRestrita) {
-    botaoFecharPainel.addEventListener('click', () => {
-        areaRestrita.style.display = 'none'; // Esconde a tela de login
-    });
+// FUNÇÃO ORIGINAL PARA FECHAR O PAINEL DO LOCUTOR
+function fecharPainelLocutor() {
+    const modalAreaRestrita = document.getElementById('painel-do-locutor') || document.querySelector('.area-restrita') || document.querySelector('.modal');
+    if (modalAreaRestrita) {
+        modalAreaRestrita.style.display = 'none';
+        modalAreaRestrita.style.visibility = 'hidden';
+        modalAreaRestrita.classList.remove('active');
+    }
 }
 
-// Função para ligar e desligar o player de áudio com tratamento antiqueda
+// Procura o link ou botão do menu que o usuário clica para abrir o painel
+const botoesPainel = document.querySelectorAll('a[href*="painel"], .painel-link, #painelLocutor');
+botoesPainel.forEach(botao => {
+    botao.addEventListener('click', abrirPainelLocutor);
+});
+
+// Procura os botões de fechar (o "X" ou botão cancelar da janela)
+const botoesFechar = document.querySelectorAll('.area-restrita .close, #painel-do-locutor .close, .modal .close, #fecharPainel');
+botoesFechar.forEach(botao => {
+    botao.addEventListener('click', fecharPainelLocutor);
+});
+
+// Se o seu site usa o link com o texto "Painel do locutor" no menu
+const todosLinks = document.querySelectorAll('a, li');
+todosLinks.forEach(link => {
+    if (link.textContent.includes('Painel') || link.textContent.includes('locutor')) {
+        link.addEventListener('click', abrirPainelLocutor);
+    }
+});
+
+
+// MOTOR DO PLAYER DE ÁUDIO DO AUTODJ
 function alternarPlayer() {
     if (!transmitindo) {
         audioPlayer.src = "/radio.mp3";
@@ -34,43 +69,37 @@ function alternarPlayer() {
             .then(() => {
                 transmitindo = true;
                 if(botaoPlay) botaoPlay.innerText = "⏸ Pausar Rádio";
-                console.log("[Player] Transmissão conectada com sucesso.");
             })
             .catch(err => {
-                console.error("[Player] Bloqueio de Autoplay do navegador. Aguardando clique.", err);
+                console.error("[Player] Erro ao iniciar áudio:", err);
             });
     } else {
         audioPlayer.pause();
-        audioPlayer.src = ""; // Limpa o buffer
+        audioPlayer.src = ""; 
         transmitindo = false;
         if(botaoPlay) botaoPlay.innerText = "▶ Ouvir rádio";
-        console.log("[Player] Transmissão interrompida pelo usuário.");
     }
 }
 
-// Vincula o evento de clique ao botão principal da rádio
 if (botaoPlay) {
     botaoPlay.addEventListener('click', alternarPlayer);
 }
 
-// Tenta iniciar o som automaticamente assim que o site carregar na tela
+// Inicialização automática do som ao carregar
 window.addEventListener('DOMContentLoaded', () => {
-    // Liga o cano de som de fundo
     audioPlayer.src = "/radio.mp3";
     audioPlayer.crossOrigin = "anonymous";
-    
-    // Tenta dar o play sozinho
     audioPlayer.play()
         .then(() => {
             transmitindo = true;
             if(botaoPlay) botaoPlay.innerText = "⏸ Pausar Rádio";
         })
-        .catch(err => {
-            console.log("[Aviso] O navegador bloqueou o som automático. O usuário precisa interagir com a página antes.");
+        .catch(() => {
+            console.log("[Autoplay] Navegador bloqueou o início automático sem clique.");
         });
 });
 
-// Sincronização em tempo real de metadados via WebSockets
+// Sincronização do status da rádio (AO VIVO / AUTO DJ) via Socket
 socket.on('atualizar-status', (dados) => {
     const statusTexto = document.getElementById('statusRadio');
     if (statusTexto && dados) {
