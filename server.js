@@ -43,7 +43,7 @@ function processarAutoDJ() {
     const caminhoCompleto = path.join(__dirname, 'public', musicaAtual);
     console.log(`[AutoDJ 24H] Transmitindo faixa: ${musicaAtual}`);
 
-    const fluxoLeitura = fs.createReadStream(caminCompleto);
+    fs.createReadStream(caminhoCompleto);
 
     fluxoLeitura.on('data', (blocoAudio) => {
         if (!streamingAoVivo) {
