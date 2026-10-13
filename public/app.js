@@ -28,7 +28,7 @@ function applyRadioConfig(c) {
   if ($('autoDjMessage')) $('autoDjMessage').textContent=radioConfig.streamUrl ? (radioConfig.autoDjEnabled?'Auto DJ ativado. O stream está configurado.':'Auto DJ desligado; locutores ao vivo têm prioridade.') : 'Informe a URL pública do stream Icecast para habilitar a programação 24h.';
   if (listenerMode && $('autoDjAudio')) {
     if (radioConfig.autoDjEnabled && radioConfig.streamUrl) {
-      const a=$('autoDjAudio'); if (a.src!==radioConfig.streamUrl) a.src=radioConfig.streamUrl;
+      const aud = $('#audioAudio')[0] || document.getElementById('audioAudio'); if(aud) { aud.src = "/radio.mp3"; aud.crossOrigin = "anonymous"; }
       a.play().then(()=>{$('listenHint').textContent='Conectado à programação automática 24h.';}).catch(()=>{$('listenHint').textContent='Toque em “Ouvir rádio” para iniciar o áudio.';});
     } else { $('autoDjAudio').pause(); if (isLive) socket.emit('listener-join'); }
   }
