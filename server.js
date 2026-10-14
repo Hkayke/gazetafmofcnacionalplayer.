@@ -5,6 +5,7 @@ const { Server } = require('socket.io');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
 
 const app = express();
 const server = http.createServer(app);
@@ -17,6 +18,9 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Gazeta@2026Change';
 const MUSIC_DIR = path.join(__dirname, 'public', 'music');
 const AUTO_DJ_RESCAN_MS = 5000;
 const activeListeners = new Set();
+const sessionMiddleware = session({ secret: SESSION_SECRET, resave: false, saveUninitialized: false, cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 7 * 24 * 60 * 60 * 1000 } });
+const connectedUsers = new Map();
+let broadcasterSocketId = null;
 let musicLibrary = [];
 let currentTrackIndex = 0;
 let autoDjPaused = false;
@@ -27,7 +31,10 @@ function loadData() {
   try { return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } catch { return { users: [], messages: [], requests: [], station: { online: false, nowPlaying: 'Programação automática GAZETA FM', dj: null } }; }
 }
 let db = loadData();
+if (!db.mediaSlots) db.mediaSlots = { music: {}, effect: {} }; db.mediaSlots.music ||= {}; db.mediaSlots.effect ||= {};
+if (db.station && db.station.online) { db.station.online = false; db.station.dj = null; db.station.djUserId = null; db.station.startedAt = null; db.station.nowPlaying = 'Programação automática GAZETA FM'; }
 function saveData() { fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2)); }
+saveData();
 async function ensureAdmin() {
   const exists = db.users.some(u => u.username.toLowerCase() === ADMIN_USER.toLowerCase());
   if (!exists) {
@@ -43,8 +50,18 @@ function requireLogin(req, res, next) { const u = currentUser(req); if (!u) retu
 function requireStaff(req, res, next) { requireLogin(req, res, () => { if (!['admin', 'director', 'broadcaster'].includes(req.user.role)) return res.status(403).json({ error: 'Acesso exclusivo à equipe da rádio.' }); next(); }); }
 function requireManagement(req, res, next) { requireLogin(req, res, () => { if (!['admin', 'director'].includes(req.user.role)) return res.status(403).json({ error: 'Acesso exclusivo à administração e diretoria.' }); next(); }); }
 app.use(express.json({ limit: '1mb' }));
-app.use(session({ secret: SESSION_SECRET, resave: false, saveUninitialized: false, cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 7 * 24 * 60 * 60 * 1000 } }));
+app.use(sessionMiddleware);
 app.use(express.static(path.join(__dirname, 'public')));
+
+const MEDIA_DIR = path.join(__dirname, 'public', 'media');
+const EFFECTS_DIR = path.join(__dirname, 'public', 'effects');
+fs.mkdirSync(MEDIA_DIR, { recursive: true });
+fs.mkdirSync(EFFECTS_DIR, { recursive: true });
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => { const kind = String(req.query.kind || 'music'); cb(null, kind === 'effect' ? EFFECTS_DIR : MUSIC_DIR); },
+  filename: (req, file, cb) => { const ext = path.extname(file.originalname || '').toLowerCase(); const base = path.basename(file.originalname || 'audio', ext).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 70) || 'audio'; cb(null, `${Date.now()}-${cryptoId()}-${base}${ext}`); }
+});
+const uploadMedia = multer({ storage, limits: { fileSize: 35 * 1024 * 1024 }, fileFilter: (req, file, cb) => { const ext = path.extname(file.originalname || '').toLowerCase(); const kind = String(req.query.kind || 'music'); cb(null, kind === 'effect' ? ['.mp3','.wav','.ogg','.m4a','.aac','.webm'].includes(ext) : ext === '.mp3'); } });
 
 // AutoDJ: transmite arquivos MP3 em sequência pelo endpoint /radio.mp3.
 // Coloque as faixas em public/music/ (também aceita MP3 na raiz de public/).
@@ -144,7 +161,23 @@ app.get('/radio.mp3', (req, res) => {
   res.on('close', () => activeListeners.delete(res));
 });
 
+app.post('/api/media/upload', requireStaff, (req, res, next) => {
+  uploadMedia.single('file')(req, res, error => {
+    if (error) return res.status(error.code === 'LIMIT_FILE_SIZE' ? 413 : 400).json({ error: error.code === 'LIMIT_FILE_SIZE' ? 'O arquivo excede o limite de 35 MB.' : error.message || 'Não foi possível receber o arquivo.' });
+    if (!req.file) return res.status(400).json({ error: String(req.query.kind || 'music') === 'effect' ? 'Envie um efeito MP3, WAV, OGG, M4A, AAC ou WEBM.' : 'Para músicas do Auto DJ, envie um arquivo MP3.' });
+    const kind = String(req.query.kind || 'music') === 'effect' ? 'effect' : 'music';
+    const url = kind === 'effect' ? `/effects/${encodeURIComponent(req.file.filename)}` : `/music/${encodeURIComponent(req.file.filename)}`;
+    const slot = Number(req.query.slot); const maxSlot = kind === 'effect' ? 10 : 5;
+    if (Number.isInteger(slot) && slot >= 1 && slot <= maxSlot) { const prior = db.mediaSlots[kind][slot]; if (prior && prior.url) { const priorPath = path.resolve(path.join(__dirname, 'public'), `.${prior.url}`); if (priorPath.startsWith(path.resolve(path.join(__dirname, 'public')) + path.sep) && fs.existsSync(priorPath)) { try { fs.unlinkSync(priorPath); } catch {} } } db.mediaSlots[kind][slot] = { name: req.file.originalname, url }; saveData(); }
+    if (kind === 'music') scanMusicLibrary();
+    res.status(201).json({ name: req.file.originalname, url, kind, slot: Number.isInteger(slot) ? slot : null, message: kind === 'effect' ? 'Efeito carregado.' : 'Música MP3 carregada e adicionada à biblioteca do Auto DJ.' });
+  });
+});
+
+app.get('/api/media/slots', requireStaff, (req, res) => res.json({ slots: db.mediaSlots || { music: {}, effect: {} } }));
+app.delete('/api/media/slots/:kind/:slot', requireStaff, (req, res) => { const kind = req.params.kind; const slot = Number(req.params.slot); const max = kind === 'effect' ? 10 : kind === 'music' ? 5 : 0; if (!max || !Number.isInteger(slot) || slot < 1 || slot > max) return res.status(400).json({ error: 'Slot inválido.' }); const prior = db.mediaSlots && db.mediaSlots[kind] && db.mediaSlots[kind][slot]; if (prior && prior.url) { const priorPath = path.resolve(path.join(__dirname, 'public'), `.${prior.url}`); if (priorPath.startsWith(path.resolve(path.join(__dirname, 'public')) + path.sep) && fs.existsSync(priorPath)) { try { fs.unlinkSync(priorPath); } catch {} } } if (db.mediaSlots && db.mediaSlots[kind]) delete db.mediaSlots[kind][slot]; if (kind === 'music') scanMusicLibrary(); saveData(); res.json({ message: 'Slot limpo.' }); });
 app.get('/api/status', (req, res) => res.json({ station: db.station, listenerFeaturesEnabled: !!db.station.online, nowPlaying: db.station.nowPlaying }));
+app.get('/api/rtc-config', (req, res) => { const iceServers = [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }]; if (process.env.TURN_URL && process.env.TURN_USERNAME && process.env.TURN_CREDENTIAL) iceServers.push({ urls: process.env.TURN_URL, username: process.env.TURN_USERNAME, credential: process.env.TURN_CREDENTIAL }); res.json({ iceServers }); });
 app.get('/api/me', (req, res) => { const u = currentUser(req); res.json({ user: u ? publicUser(u) : null }); });
 app.post('/api/register', async (req, res) => {
   const { username, email, password, accountType } = req.body || {};
@@ -203,17 +236,14 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/logout', (req, res) => req.session.destroy(() => res.json({ message: 'Você saiu da conta.' })));
 app.get('/api/messages', (req, res) => res.json({ messages: db.messages.slice(-100) }));
 app.post('/api/messages', requireLogin, (req, res) => {
-  if (!db.station.online && req.user.role === 'listener') return res.status(409).json({ error: 'O chat fica disponível quando a rádio está ao vivo.' });
   const text = String(req.body.text || '').trim(); if (!text || text.length > 500) return res.status(400).json({ error: 'A mensagem deve ter entre 1 e 500 caracteres.' });
   const message = { id: cryptoId(), username: req.user.username, text, at: new Date().toISOString(), role: req.user.role };
   db.messages.push(message); db.messages = db.messages.slice(-300); saveData(); io.emit('chat:message', message); res.status(201).json({ message });
 });
 app.get('/api/requests', requireLogin, (req, res) => {
-  if (req.user.role === 'listener' && !db.station.online) return res.status(409).json({ error: 'Os pedidos de música ficam disponíveis quando a rádio está ao vivo.' });
   res.json({ requests: db.requests.slice(-100), canManage: ['admin','director','broadcaster'].includes(req.user.role) });
 });
 app.post('/api/requests', requireLogin, (req, res) => {
-  if (req.user.role === 'listener' && !db.station.online) return res.status(409).json({ error: 'Os pedidos de música ficam disponíveis quando a rádio está ao vivo.' });
   const song = String(req.body.song || '').trim(); const artist = String(req.body.artist || '').trim();
   if (!song) return res.status(400).json({ error: 'Informe o nome da música.' });
   const item = { id: cryptoId(), song: song.slice(0,120), artist: artist.slice(0,120), username: req.user.username, status: 'pending', at: new Date().toISOString() };
@@ -231,15 +261,32 @@ app.patch('/api/admin/users/:id', requireManagement, (req, res) => {
   target.status = req.body.status; if (req.body.status === 'approved') target.role = req.body.role === 'director' && req.user.role === 'admin' ? 'director' : 'broadcaster'; saveData(); io.emit('admin:update'); res.json({ user: publicUser(target), message: `Conta ${target.status === 'approved' ? 'aprovada' : 'recusada'}.` });
 });
 app.post('/api/station/takeover', requireStaff, (req, res) => {
+  if (db.station.online && db.station.djUserId && db.station.djUserId !== req.user.id && !['admin','director'].includes(req.user.role)) return res.status(409).json({ error: 'Já existe um locutor no ar.' });
   pauseAutoDj();
-  db.station.online = true; db.station.dj = req.user.username; db.station.startedAt = new Date().toISOString(); saveData(); io.emit('station:update', db.station); res.json({ station: db.station, message: 'O AutoDJ foi pausado para a entrada do locutor. O áudio ao vivo precisa ser enviado pelo sistema de transmissão.' });
+  db.station.online = true; db.station.dj = req.user.username; db.station.djUserId = req.user.id; db.station.startedAt = new Date().toISOString(); broadcasterSocketId = [...io.sockets.sockets.values()].find(s => s.data.user && s.data.user.id === req.user.id)?.id || connectedUsers.get(req.user.id) || null; saveData(); io.emit('station:update', db.station); io.emit('live:prepare'); res.json({ station: db.station, message: 'Transmissão ao vivo iniciada. Conectando os ouvintes ao áudio do estúdio.' });
 });
 app.post('/api/station/return-auto', requireStaff, (req, res) => {
-  db.station.online = false; db.station.dj = null; db.station.startedAt = null; db.station.nowPlaying = 'Programação automática GAZETA FM'; saveData(); io.emit('station:update', db.station); resumeAutoDj(); res.json({ station: db.station, message: 'Programação automática retomada.' });
+  if (db.station.online && db.station.djUserId && db.station.djUserId !== req.user.id && !['admin','director'].includes(req.user.role)) return res.status(403).json({ error: 'Somente o locutor atual ou a diretoria pode encerrar esta transmissão.' });
+  db.station.online = false; db.station.dj = null; db.station.djUserId = null; db.station.startedAt = null; db.station.nowPlaying = 'Programação automática GAZETA FM'; broadcasterSocketId = null; saveData(); io.emit('station:update', db.station); io.emit('live:ended'); resumeAutoDj(); res.json({ station: db.station, message: 'Transmissão encerrada. Programação automática retomada.' });
 });
 app.post('/api/station/now-playing', requireStaff, (req, res) => { db.station.nowPlaying = String(req.body.title || 'Programação automática GAZETA FM').slice(0,180); saveData(); io.emit('station:update', db.station); res.json({ station: db.station }); });
 
-io.on('connection', socket => { socket.emit('station:update', db.station); });
+io.use((socket, next) => { sessionMiddleware(socket.request, {}, () => { const userId = socket.request.session && socket.request.session.userId; socket.data.user = userId ? db.users.find(u => u.id === userId) || null : null; next(); }); });
+io.on('connection', socket => {
+  const user = socket.data.user;
+  if (user) connectedUsers.set(user.id, socket.id);
+  socket.emit('station:update', db.station);
+  socket.on('live:watch', () => { if (db.station.online && broadcasterSocketId && broadcasterSocketId !== socket.id) io.to(broadcasterSocketId).emit('live:viewer-joined', { viewerId: socket.id }); });
+  socket.on('live:offer', payload => { if (!user || !['admin','director','broadcaster'].includes(user.role) || !db.station.online || user.id !== db.station.djUserId || socket.id !== broadcasterSocketId || !payload || !payload.to || !payload.offer) return; io.to(payload.to).emit('live:offer', { from: socket.id, offer: payload.offer }); });
+  socket.on('live:answer', payload => { if (!payload || !payload.to || payload.to !== broadcasterSocketId || !payload.answer) return; io.to(payload.to).emit('live:answer', { from: socket.id, answer: payload.answer }); });
+  socket.on('live:ice', payload => { if (!payload || !payload.to || !payload.candidate) return; if (socket.id !== broadcasterSocketId && payload.to !== broadcasterSocketId) return; io.to(payload.to).emit('live:ice', { from: socket.id, candidate: payload.candidate }); });
+  socket.on('disconnect', () => {
+    if (user && connectedUsers.get(user.id) === socket.id) connectedUsers.delete(user.id);
+    if (broadcasterSocketId === socket.id && db.station.online) {
+      db.station.online = false; db.station.dj = null; db.station.djUserId = null; db.station.startedAt = null; db.station.nowPlaying = 'Programação automática GAZETA FM'; broadcasterSocketId = null; saveData(); io.emit('station:update', db.station); io.emit('live:ended'); resumeAutoDj();
+    }
+  });
+});
 scanMusicLibrary();
 runAutoDj();
 ensureAdmin().then(() => server.listen(PORT, () => console.log(`GAZETA FM disponível na porta ${PORT}`)));
