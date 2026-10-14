@@ -15,3 +15,30 @@ body.studio-mode,body.admin-mode{background:#05070d}body.studio-mode main,body.a
 [hidden]{display:none!important}
 body.studio-mode .tab[data-page=locutor],body.studio-mode .tab[data-page=diretoria],body.admin-mode .tab[data-page=diretoria]{display:none!important}
 body.studio-mode .studio-link:before{content:'◈'}body.studio-mode .studio-link[data-studio-view=home]:before{content:'⌂'}body.studio-mode .studio-link[data-studio-view=music]:before{content:'♫'}body.studio-mode .studio-link[data-studio-view=effects]:before{content:'≋'}body.studio-mode .studio-link[data-studio-view=listeners]:before{content:'♙'}body.studio-mode .studio-link[data-studio-view=requests]:before{content:'♪'}body.studio-mode .studio-link[data-studio-view=chat]:before{content:'▤'}body.studio-mode .studio-link[data-studio-view=program]:before{content:'▦'}body.studio-mode .studio-link[data-studio-view=reports]:before{content:'▥'}body.studio-mode .studio-link[data-studio-view=settings]:before{content:'⚙'}
+
+/* Refinamento visual: hierarquia mais clara e brilho vermelho controlado */
+:root{--red:#f20d32;--red-bright:#ff284b;--line:#202b3b;--shadow:0 18px 55px #0008}
+body{background:radial-gradient(ellipse at 80% 0%,#250913 0,transparent 34%),#05070d;color:#f4f7fc}
+.topbar{border-bottom:1px solid #1d2634;background:#070a12ee;backdrop-filter:blur(16px)}
+.brand-icon,.modal-brand{box-shadow:0 0 28px #f20d3240,0 0 70px #f20d3210}
+.btn-primary,.btn-live{box-shadow:0 0 22px #f20d322b;transition:transform .18s,box-shadow .18s,filter .18s}
+.btn-primary:hover,.btn-live:hover{box-shadow:0 0 30px #f20d3260;filter:brightness(1.08);transform:translateY(-1px)}
+.panel,.studio-top,.locked{border-color:#202a3a;background:linear-gradient(145deg,#0d1320f5,#080c14f8);box-shadow:0 12px 32px #0003}
+.panel-heading{gap:12px}.panel-icon{box-shadow:0 0 18px #f20d3225}
+.status-pill.pending{box-shadow:0 0 13px #f7ba3720}
+.approval-item{border:1px solid #202a3a;border-radius:12px;padding:14px;background:linear-gradient(120deg,#101725,#0a0f18);gap:14px}
+.approval-actions .btn{min-width:92px}
+body.studio-mode .tabs,body.admin-mode .tabs{background:linear-gradient(180deg,#090d16,#06080e);box-shadow:12px 0 32px #0003;border-right:1px solid #1f2939}
+body.studio-mode .tabs:after,body.admin-mode .tabs:after{content:'GAZETA FM  •  ESTÚDIO';display:block;margin-top:auto;padding:20px 12px 5px;color:#58677d;font-size:9px;letter-spacing:.13em;font-weight:800}
+body.studio-mode .tab.active,body.admin-mode .tab.active{box-shadow:0 0 24px #f20d3228,inset 0 0 0 1px #ff526a55}
+body.studio-mode .section-heading h2,body.admin-mode .section-heading h2{letter-spacing:-.04em}
+body.studio-mode .studio-grid{align-items:start;gap:16px}
+body.studio-mode .studio-grid>.panel,body.admin-mode #adminPanel>.panel{min-width:0}
+#approvalList{margin-top:10px}
+.modal-card{border-color:#52202f;box-shadow:0 0 0 1px #f20d3210,0 0 65px #f20d321b,0 25px 90px #000c}
+.modal-card input:focus,.stack-form input:focus{border-color:#ff3656;box-shadow:0 0 0 3px #f20d3222;outline:0}
+.form-message{padding:0 2px;line-height:1.5}
+.form-message.error{padding:9px 11px;background:#f20d3210;border:1px solid #f20d3235;border-radius:8px}
+.form-message.success{padding:9px 11px;background:#16b97810;border:1px solid #16b97840;border-radius:8px}
+@media(min-width:721px){body.studio-mode main,body.admin-mode main{padding-left:250px;padding-right:28px}body.studio-mode .studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}body.studio-mode .studio-top,body.admin-mode .section-heading{max-width:1500px}}
+@media(max-width:720px){body.studio-mode .tabs,body.admin-mode .tabs{box-shadow:0 10px 22px #0005}body.studio-mode .tabs:after,body.admin-mode .tabs:after{display:none}.approval-item{padding:12px}.approval-actions .btn{min-width:0}}
