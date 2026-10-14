@@ -8,6 +8,8 @@ const path = require('path');
 const multer = require('multer');
 
 const app = express();
+// Necessário para sessões/cookies seguros atrás do proxy HTTPS do Render.
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 const io = new Server(server);
 const PORT = process.env.PORT || 3000;
@@ -36,12 +38,21 @@ if (db.station && db.station.online) { db.station.online = false; db.station.dj 
 function saveData() { fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2)); }
 saveData();
 async function ensureAdmin() {
-  const exists = db.users.some(u => u.username.toLowerCase() === ADMIN_USER.toLowerCase());
-  if (!exists) {
-    db.users.push({ id: cryptoId(), username: ADMIN_USER, email: '', passwordHash: await bcrypt.hash(ADMIN_PASSWORD, 12), role: 'admin', status: 'approved', createdAt: new Date().toISOString() });
-    saveData();
-    console.log(`Conta principal criada: ${ADMIN_USER}. Configure uma senha forte por variável de ambiente.`);
+  // A conta definida nas variáveis do serviço é a fonte de verdade.
+  // Corrige bancos antigos em que o usuário 'admin' foi criado como ouvinte/locutor.
+  let admin = db.users.find(u => String(u.username || '').toLowerCase() === ADMIN_USER.toLowerCase());
+  if (!admin) {
+    admin = { id: cryptoId(), username: ADMIN_USER, email: '', createdAt: new Date().toISOString() };
+    db.users.push(admin);
+    console.log(`Conta administrativa criada: ${ADMIN_USER}.`);
   }
+  admin.username = ADMIN_USER;
+  admin.passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
+  admin.role = 'admin';
+  admin.status = 'approved';
+  admin.email = admin.email || '';
+  admin.createdAt = admin.createdAt || new Date().toISOString();
+  saveData();
 }
 function cryptoId() { return require('crypto').randomBytes(12).toString('hex'); }
 function publicUser(u) { return { id: u.id, username: u.username, email: u.email, role: u.role, status: u.status, createdAt: u.createdAt }; }
@@ -192,8 +203,20 @@ app.post('/api/register', async (req, res) => {
   const existingByUsername = db.users.find(u => u.username.toLowerCase() === cleanUsername.toLowerCase());
   const existingByEmail = db.users.find(u => String(u.email || '').toLowerCase() === cleanEmail);
 
-  // Quem já criou uma conta de ouvinte pode pedir acesso de locutor usando
-  // a mesma conta, desde que informe usuário, e-mail e senha correspondentes.
+  // Quem já criou uma conta de ouvinte pode pedir acesso de locutor usando a mesma conta.
+  // O e-mail é usado para localizar a conta existente; a senha continua obrigatória.
+  if (type === 'broadcaster' && existingByEmail && existingByEmail.role === 'listener' && (!existingByUsername || existingByUsername.id === existingByEmail.id)) {
+    const existing = existingByEmail;
+    if (!(await bcrypt.compare(cleanPassword, existing.passwordHash))) return res.status(401).json({ error: 'Já existe uma conta com esse e-mail. Entre com a senha dessa conta ou faça login e use “Solicitar acesso de locutor”.' });
+    existing.role = 'broadcaster';
+    existing.status = 'pending';
+    existing.requestedRole = 'broadcaster';
+    existing.requestedAt = new Date().toISOString();
+    saveData();
+    io.emit('admin:update');
+    return res.status(201).json({ message: 'Solicitação enviada usando sua conta existente! A diretoria já pode visualizar seu cadastro.' });
+  }
+
   if (type === 'broadcaster' && existingByUsername && existingByEmail && existingByUsername.id === existingByEmail.id) {
     const existing = existingByUsername;
     if (!(await bcrypt.compare(cleanPassword, existing.passwordHash))) {
@@ -221,17 +244,31 @@ app.post('/api/register', async (req, res) => {
 
   const user = { id: cryptoId(), username: cleanUsername, email: cleanEmail, passwordHash: await bcrypt.hash(cleanPassword, 12), role: type, status: type === 'broadcaster' ? 'pending' : 'approved', createdAt: new Date().toISOString() };
   db.users.push(user); saveData();
-  if (type === 'listener') { req.session.userId = user.id; return res.status(201).json({ user: publicUser(user), message: 'Conta criada com sucesso!' }); }
+  if (type === 'listener') { req.session.userId = user.id; return req.session.save(err => { if (err) return res.status(500).json({ error: 'Conta criada, mas não foi possível iniciar a sessão. Faça login.' }); res.status(201).json({ user: publicUser(user), message: 'Conta criada com sucesso!' }); }); }
   io.emit('admin:update');
   res.status(201).json({ message: 'Solicitação enviada! Aguarde a aprovação da administração.' });
 });
+app.post('/api/request-broadcaster', requireLogin, (req, res) => {
+  const user = req.user;
+  if (['admin', 'director'].includes(user.role)) return res.status(409).json({ error: 'Sua conta já possui acesso administrativo.' });
+  if (user.role === 'broadcaster' && user.status === 'pending') return res.status(409).json({ error: 'Sua solicitação já está aguardando aprovação.' });
+  if (user.role === 'broadcaster' && user.status === 'approved') return res.status(409).json({ error: 'Sua conta já está aprovada para o estúdio.' });
+  user.role = 'broadcaster';
+  user.status = 'pending';
+  user.requestedRole = 'broadcaster';
+  user.requestedAt = new Date().toISOString();
+  saveData();
+  io.emit('admin:update');
+  req.session.destroy(() => res.status(201).json({ message: 'Solicitação enviada! A diretoria já pode visualizar seu cadastro. Aguarde a aprovação.' }));
+});
+
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body || {};
   const user = db.users.find(u => u.username.toLowerCase() === String(username || '').trim().toLowerCase());
   if (!user || !(await bcrypt.compare(String(password || ''), user.passwordHash))) return res.status(401).json({ error: 'Usuário ou senha incorretos.' });
   if (user.status === 'pending') return res.status(403).json({ error: 'Sua solicitação ainda está aguardando aprovação.' });
   if (user.status === 'rejected') return res.status(403).json({ error: 'Sua solicitação de locutor foi recusada. Fale com a diretoria.' });
-  req.session.userId = user.id; res.json({ user: publicUser(user), message: 'Login realizado.' });
+  req.session.userId = user.id; req.session.save(err => { if (err) return res.status(500).json({ error: 'Não foi possível iniciar a sessão. Tente novamente.' }); res.set('Cache-Control', 'no-store'); res.json({ user: publicUser(user), message: 'Login realizado.' }); });
 });
 app.post('/api/logout', (req, res) => req.session.destroy(() => res.json({ message: 'Você saiu da conta.' })));
 app.get('/api/messages', (req, res) => res.json({ messages: db.messages.slice(-100) }));
@@ -254,11 +291,15 @@ app.patch('/api/requests/:id', requireStaff, (req, res) => {
   const allowed = ['pending','accepted','played','rejected']; if (!allowed.includes(req.body.status)) return res.status(400).json({ error: 'Estado inválido.' });
   item.status = req.body.status; saveData(); io.emit('requests:update'); res.json({ request: item });
 });
-app.get('/api/admin/users', requireManagement, (req, res) => res.json({ users: db.users.filter(u => u.role === 'broadcaster' || u.role === 'director').map(publicUser) }));
+app.get('/api/admin/users', requireManagement, (req, res) => {
+  const users = db.users.filter(u => ['broadcaster', 'director'].includes(u.role) || (u.status === 'pending' && u.requestedRole === 'broadcaster'));
+  res.set('Cache-Control', 'no-store');
+  res.json({ users: users.map(publicUser), pendingCount: users.filter(u => u.status === 'pending').length });
+});
 app.patch('/api/admin/users/:id', requireManagement, (req, res) => {
   const target = db.users.find(u => u.id === req.params.id); if (!target) return res.status(404).json({ error: 'Conta não encontrada.' });
   if (!['approved','rejected'].includes(req.body.status)) return res.status(400).json({ error: 'Decisão inválida.' });
-  target.status = req.body.status; if (req.body.status === 'approved') target.role = req.body.role === 'director' && req.user.role === 'admin' ? 'director' : 'broadcaster'; saveData(); io.emit('admin:update'); res.json({ user: publicUser(target), message: `Conta ${target.status === 'approved' ? 'aprovada' : 'recusada'}.` });
+  target.status = req.body.status; if (req.body.status === 'approved') { target.role = req.body.role === 'director' && req.user.role === 'admin' ? 'director' : 'broadcaster'; delete target.requestedRole; } else { target.role = 'broadcaster'; } target.reviewedAt = new Date().toISOString(); saveData(); io.emit('admin:update'); res.json({ user: publicUser(target), message: `Conta ${target.status === 'approved' ? 'aprovada' : 'recusada'}.` });
 });
 app.post('/api/station/takeover', requireStaff, (req, res) => {
   if (db.station.online && db.station.djUserId && db.station.djUserId !== req.user.id && !['admin','director'].includes(req.user.role)) return res.status(409).json({ error: 'Já existe um locutor no ar.' });
