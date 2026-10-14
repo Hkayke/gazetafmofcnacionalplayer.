@@ -14,14 +14,6 @@ const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 const SESSION_SECRET = process.env.SESSION_SECRET || 'change-this-session-secret-before-deploying';
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Gazeta@2026Change';
-const MUSIC_DIR = path.join(__dirname, 'public', 'music');
-const AUTO_DJ_RESCAN_MS = 5000;
-const activeListeners = new Set();
-let musicLibrary = [];
-let currentTrackIndex = 0;
-let autoDjPaused = false;
-let autoDjRunning = false;
-let currentTrackStream = null;
 
 function loadData() {
   try { return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } catch { return { users: [], messages: [], requests: [], station: { online: false, nowPlaying: 'Programação automática GAZETA FM', dj: null } }; }
@@ -45,104 +37,6 @@ function requireManagement(req, res, next) { requireLogin(req, res, () => { if (
 app.use(express.json({ limit: '1mb' }));
 app.use(session({ secret: SESSION_SECRET, resave: false, saveUninitialized: false, cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 7 * 24 * 60 * 60 * 1000 } }));
 app.use(express.static(path.join(__dirname, 'public')));
-
-// AutoDJ: transmite arquivos MP3 em sequência pelo endpoint /radio.mp3.
-// Coloque as faixas em public/music/ (também aceita MP3 na raiz de public/).
-function scanMusicLibrary() {
-  try {
-    fs.mkdirSync(MUSIC_DIR, { recursive: true });
-    const root = path.join(__dirname, 'public');
-    const files = [];
-    for (const folder of [root, MUSIC_DIR]) {
-      if (!fs.existsSync(folder)) continue;
-      for (const name of fs.readdirSync(folder)) {
-        if (!name.toLowerCase().endsWith('.mp3') || name.toLowerCase() === 'radio.mp3') continue;
-        const fullPath = path.join(folder, name);
-        try { if (fs.statSync(fullPath).isFile()) files.push({ name, fullPath }); } catch {}
-      }
-    }
-    const unique = new Map(files.map(f => [f.fullPath, f]));
-    musicLibrary = [...unique.values()].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-    if (currentTrackIndex >= musicLibrary.length) currentTrackIndex = 0;
-    console.log(`[AutoDJ] ${musicLibrary.length} faixa(s) encontrada(s).`);
-  } catch (error) {
-    console.error('[AutoDJ] Falha ao procurar músicas:', error.message);
-  }
-}
-
-function broadcastAudio(chunk) {
-  for (const res of activeListeners) {
-    if (res.destroyed || res.writableEnded) { activeListeners.delete(res); continue; }
-    // Evita que um ouvinte com conexão muito lenta acumule memória sem limite.
-    if (res.writableLength > 2 * 1024 * 1024) {
-      activeListeners.delete(res);
-      res.end();
-      continue;
-    }
-    try { res.write(chunk); } catch { activeListeners.delete(res); }
-  }
-}
-
-function updateAutoDjTrack(track) {
-  if (!track) return;
-  db.station.nowPlaying = track.name.replace(/\.mp3$/i, '');
-  saveData();
-  io.emit('station:update', db.station);
-  console.log(`[AutoDJ 24H] Tocando: ${track.name}`);
-}
-
-function runAutoDj() {
-  if (autoDjPaused || autoDjRunning) return;
-  if (!musicLibrary.length) {
-    scanMusicLibrary();
-    if (!musicLibrary.length) {
-      setTimeout(runAutoDj, AUTO_DJ_RESCAN_MS);
-      return;
-    }
-  }
-  const track = musicLibrary[currentTrackIndex % musicLibrary.length];
-  currentTrackIndex = (currentTrackIndex + 1) % musicLibrary.length;
-  autoDjRunning = true;
-  updateAutoDjTrack(track);
-  currentTrackStream = fs.createReadStream(track.fullPath);
-  currentTrackStream.on('data', chunk => {
-    if (!autoDjPaused) broadcastAudio(chunk);
-  });
-  currentTrackStream.on('end', () => {
-    autoDjRunning = false;
-    currentTrackStream = null;
-    if (!autoDjPaused) setImmediate(runAutoDj);
-  });
-  currentTrackStream.on('error', error => {
-    console.error(`[AutoDJ] Erro ao tocar ${track.name}:`, error.message);
-    autoDjRunning = false;
-    currentTrackStream = null;
-    setTimeout(runAutoDj, 1000);
-  });
-}
-
-function pauseAutoDj() {
-  autoDjPaused = true;
-  // A leitura atual termina em segundo plano, mas seus blocos deixam de ser enviados.
-}
-function resumeAutoDj() {
-  autoDjPaused = false;
-  if (!autoDjRunning) runAutoDj();
-}
-
-app.get('/radio.mp3', (req, res) => {
-  res.writeHead(200, {
-    'Content-Type': 'audio/mpeg',
-    'Transfer-Encoding': 'chunked',
-    'Connection': 'keep-alive',
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0',
-    'Access-Control-Allow-Origin': '*'
-  });
-  activeListeners.add(res);
-  res.on('close', () => activeListeners.delete(res));
-});
 
 app.get('/api/status', (req, res) => res.json({ station: db.station, listenerFeaturesEnabled: !!db.station.online, nowPlaying: db.station.nowPlaying }));
 app.get('/api/me', (req, res) => { const u = currentUser(req); res.json({ user: u ? publicUser(u) : null }); });
@@ -199,15 +93,12 @@ app.patch('/api/admin/users/:id', requireManagement, (req, res) => {
   target.status = req.body.status; if (req.body.status === 'approved') target.role = req.body.role === 'director' && req.user.role === 'admin' ? 'director' : 'broadcaster'; saveData(); io.emit('admin:update'); res.json({ user: publicUser(target), message: `Conta ${target.status === 'approved' ? 'aprovada' : 'recusada'}.` });
 });
 app.post('/api/station/takeover', requireStaff, (req, res) => {
-  pauseAutoDj();
-  db.station.online = true; db.station.dj = req.user.username; db.station.startedAt = new Date().toISOString(); saveData(); io.emit('station:update', db.station); res.json({ station: db.station, message: 'O AutoDJ foi pausado para a entrada do locutor. O áudio ao vivo precisa ser enviado pelo sistema de transmissão.' });
+  db.station.online = true; db.station.dj = req.user.username; db.station.startedAt = new Date().toISOString(); saveData(); io.emit('station:update', db.station); res.json({ station: db.station, message: 'Estado do painel atualizado. A transmissão de áudio real será integrada na próxima etapa.' });
 });
 app.post('/api/station/return-auto', requireStaff, (req, res) => {
-  db.station.online = false; db.station.dj = null; db.station.startedAt = null; db.station.nowPlaying = 'Programação automática GAZETA FM'; saveData(); io.emit('station:update', db.station); resumeAutoDj(); res.json({ station: db.station, message: 'Programação automática retomada.' });
+  db.station.online = false; db.station.dj = null; db.station.startedAt = null; db.station.nowPlaying = 'Programação automática GAZETA FM'; saveData(); io.emit('station:update', db.station); res.json({ station: db.station, message: 'Estado atualizado para programação automática. O Auto DJ real será integrado na próxima etapa.' });
 });
 app.post('/api/station/now-playing', requireStaff, (req, res) => { db.station.nowPlaying = String(req.body.title || 'Programação automática GAZETA FM').slice(0,180); saveData(); io.emit('station:update', db.station); res.json({ station: db.station }); });
 
 io.on('connection', socket => { socket.emit('station:update', db.station); });
-scanMusicLibrary();
-runAutoDj();
 ensureAdmin().then(() => server.listen(PORT, () => console.log(`GAZETA FM disponível na porta ${PORT}`)));
