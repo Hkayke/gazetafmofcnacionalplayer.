@@ -31,12 +31,12 @@ function applyRadioConfig(c) {
   if ($('autoDjToggle')) $('autoDjToggle').checked=!!radioConfig.autoDjEnabled;
   if ($('autoDjMessage')) $('autoDjMessage').textContent=radioConfig.streamUrl ? (radioConfig.autoDjEnabled?'Auto DJ ativado. O stream está configurado.':'Auto DJ desligado; locutores ao vivo têm prioridade.') : 'Informe a URL pública do stream Icecast para habilitar a programação 24h.';
   if (listenerMode && $('autoDjAudio')) {
-    if (isLive === false && radioConfig.autoDjEnabled && radioConfig.streamUrl) {
+    if (radioConfig.autoDjEnabled && radioConfig.streamUrl) {
     const a = $('#autodjAudio')[0];
     const streamSrc = new URL(radioConfig.streamUrl, window.location.href).href;
     if (a.src !== streamSrc) { a.src = streamSrc; }
     
-    // ATUALIZADO: Inicia mutado para o navegador deixar tocar sozinho
+    // Força o início no mudo para o navegador liberar o som
     a.muted = true;
     
     a.play().then(() => {
@@ -45,15 +45,13 @@ function applyRadioConfig(c) {
         $('#listenHint').textContent = 'Clique na tela para ouvir.';
     });
 
-    // ATUALIZADO: Tira do mudo assim que o ouvinte mexer na página
+    // Ativa o som no primeiro movimento na tela
     const ativarSom = () => {
         a.muted = false;
         ['click', 'touchstart', 'scroll'].forEach(ev => document.removeEventListener(ev, ativarSom));
     };
     ['click', 'touchstart', 'scroll'].forEach(ev => document.addEventListener(ev, ativarSom));
-}
-
-}
+}}
 socket.on('radio-config', applyRadioConfig);
 fetch('/api/radio-config').then(r=>r.json()).then(applyRadioConfig).catch(()=>{});
 socket.on('connect', () => {
