@@ -1,1792 +1,1263 @@
-```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gazeta FM Nacional - Player & Estúdio Ao Vivo</title>
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Inter Font -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              gold: '#F59E0B',
-              goldLight: '#FBBF24',
-              blue: '#1E3A8A',
-              cyan: '#06B6D4',
-              red: '#EF4444',
-              darkBg: '#090D16',
-              cardBg: '#111827',
-              border: '#1F2937'
-            }
-          },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          },
-          animation: {
-            'spin-slow': 'spin 12s linear infinite',
-            'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
-            'marquee': 'marquee 25s linear infinite',
-          },
-          keyframes: {
-            pulseGlow: {
-              '0%, 100%': { boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)' },
-              '50%': { boxShadow: '0 0 30px rgba(239, 68, 68, 0.8)' },
-            },
-            marquee: {
-              '0%': { transform: 'translateX(100%)' },
-              '100%': { transform: 'translateX(-100%)' },
-            }
-          }
-        }
-      }
-    }
-  </script>
-
-  <style>
-    /* Custom Scrollbars */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #090D16;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #374151;
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #4B5563;
-    }
-
-    /* Vinyl Record Styling */
-    .record-grooves {
-      background: repeating-radial-gradient(
-        circle at center,
-        #111 0px,
-        #111 2px,
-        #222 3px,
-        #222 4px
-      );
-    }
-
-    /* Custom Toast Animation */
-    .toast-enter {
-      transform: translateY(100%);
-      opacity: 0;
-    }
-    .toast-show {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gazeta FM Nacional Player</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Poppins', sans-serif; background-color: #0b0f19; color: #f3f4f6; }
+        .custom-glow { box-shadow: 0 0 25px rgba(220, 38, 38, 0.3); }
+        .vinyl-spin { animation: spin 10s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 3px; }
+    </style>
 </head>
-<body class="bg-brand-darkBg text-gray-100 font-sans min-h-screen flex flex-col justify-between selection:bg-brand-gold selection:text-black">
+<body class="min-h-screen flex flex-col justify-between selection:bg-red-600 selection:text-white">
 
-  <!-- ==================== HEADER DA RÁDIO ==================== -->
-  <header class="bg-brand-cardBg/90 backdrop-blur-md border-b border-brand-border sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-      
-      <!-- Logo da Rádio -->
-      <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('inicio')">
-        <div class="relative w-12 h-12 rounded-full border-2 border-brand-gold bg-gradient-to-br from-brand-blue to-black p-0.5 flex items-center justify-center shadow-lg shadow-brand-gold/10">
-          <svg class="w-full h-full rounded-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="50" cy="50" r="48" fill="#0B132B" stroke="#F59E0B" stroke-width="3"/>
-            <!-- Outer Ring Accent -->
-            <circle cx="50" cy="50" r="43" stroke="#3B82F6" stroke-width="1.5" stroke-dasharray="6 3"/>
-            <!-- Headphones -->
-            <path d="M 28 52 C 28 32, 72 32, 72 52" stroke="#F59E0B" stroke-width="5" stroke-linecap="round" fill="none"/>
-            <rect x="23" y="48" width="10" height="18" rx="4" fill="#3B82F6" stroke="#F59E0B" stroke-width="1.5"/>
-            <rect x="67" y="48" width="10" height="18" rx="4" fill="#3B82F6" stroke="#F59E0B" stroke-width="1.5"/>
-            <!-- Play Icon -->
-            <polygon points="45,40 62,50 45,60" fill="#F59E0B"/>
-          </svg>
-        </div>
-        <div>
-          <span class="text-xl font-black tracking-wider bg-gradient-to-r from-brand-gold via-white to-brand-gold bg-clip-text text-transparent block uppercase">
-            Gazeta FM
-          </span>
-          <span class="text-xs text-brand-cyan tracking-widest block font-bold -mt-1 uppercase">
-            Nacional
-          </span>
-        </div>
-      </div>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-      <!-- Navigation Links (Ouvinte) -->
-      <nav class="hidden md:flex items-center space-x-1" id="nav-listener">
-        <button onclick="switchTab('inicio')" id="nav-btn-inicio" class="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 text-brand-gold bg-brand-gold/10 border border-brand-gold/20">
-          <i class="fa-solid fa-house mr-2"></i>Início
-        </button>
-        <button onclick="switchTab('pedirmusica')" id="nav-btn-pedirmusica" class="px-4 py-2 rounded-lg font-medium text-sm text-gray-300 hover:text-white hover:bg-gray-800 transition-all duration-200">
-          <i class="fa-solid fa-music mr-2"></i>Pedir Música
-        </button>
-        <button onclick="switchTab('chat')" id="nav-btn-chat" class="px-4 py-2 rounded-lg font-medium text-sm text-gray-300 hover:text-white hover:bg-gray-800 transition-all duration-200 relative">
-          <i class="fa-solid fa-comments mr-2"></i>Chat Ouvintes
-        </button>
-        <button onclick="switchTab('programacao')" id="nav-btn-programacao" class="px-4 py-2 rounded-lg font-medium text-sm text-gray-300 hover:text-white hover:bg-gray-800 transition-all duration-200">
-          <i class="fa-solid fa-calendar-days mr-2"></i>Programação
-        </button>
-        <button onclick="switchTab('equipe')" id="nav-btn-equipe" class="px-4 py-2 rounded-lg font-medium text-sm text-gray-300 hover:text-white hover:bg-gray-800 transition-all duration-200">
-          <i class="fa-solid fa-users mr-2"></i>Equipe
-        </button>
-      </nav>
-
-      <!-- Right Action: Status + Login / Studio Mode -->
-      <div class="flex items-center space-x-3">
-        <!-- Live Status Badge -->
-        <div id="header-status-badge" class="flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/30">
-          <span class="w-2 h-2 rounded-full bg-yellow-500 mr-2 animate-pulse"></span>
-          <span id="header-status-text">Aguardando TRANSMISSÃO</span>
-        </div>
-
-        <!-- Login / Studio Access Button -->
-        <button id="btn-access-portal" onclick="openLoginModal()" class="bg-gradient-to-r from-brand-gold to-yellow-600 text-black font-bold text-xs sm:text-sm px-4 py-2 rounded-lg hover:brightness-110 shadow-lg shadow-brand-gold/10 transition-all flex items-center">
-          <i class="fa-solid fa-radio mr-2"></i>
-          <span>Estúdio Ao Vivo</span>
-        </button>
-
-        <!-- Studio 3-Dots Menu (Hidden by default, shown in studio mode) -->
-        <div id="studio-menu-container" class="hidden relative">
-          <button onclick="toggleStudioDropdown()" class="p-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-200 transition">
-            <i class="fa-solid fa-ellipsis-vertical text-lg"></i>
-          </button>
-          <div id="studio-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-brand-cardBg border border-brand-border rounded-xl shadow-2xl py-2 z-50">
-            <button onclick="openModal('modal-equipe')" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-800 text-gray-300 hover:text-white flex items-center">
-              <i class="fa-solid fa-user-gear w-6 text-brand-cyan"></i> Editar Equipe
-            </button>
-            <button onclick="openModal('modal-programacao')" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-800 text-gray-300 hover:text-white flex items-center">
-              <i class="fa-solid fa-calendar-pen w-6 text-brand-gold"></i> Editar Programação
-            </button>
-            <button onclick="openModal('modal-discord')" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-800 text-gray-300 hover:text-white flex items-center">
-              <i class="fa-brands fa-discord w-6 text-indigo-400"></i> Configurar Discord
-            </button>
-            <hr class="border-gray-800 my-1">
-            <button onclick="logoutStudio()" class="w-full text-left px-4 py-2.5 text-sm hover:bg-red-500/10 text-red-400 flex items-center">
-              <i class="fa-solid fa-right-from-bracket w-6"></i> Sair do Painel
-            </button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </header>
-
-  <!-- MAIN CONTAINER -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-grow">
-
-    <!-- ==================== TAB: INÍCIO / PLAYER OUVINTE ==================== -->
-    <div id="tab-inicio" class="tab-content space-y-6">
-      
-      <!-- HERO PLAYER BANNER -->
-      <div class="relative bg-gradient-to-br from-brand-cardBg via-gray-900 to-black border border-brand-border rounded-2xl p-6 sm:p-8 shadow-2xl overflow-hidden">
-        
-        <!-- Background Ambient Glow -->
-        <div class="absolute -right-20 -top-20 w-80 h-80 bg-brand-gold/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="absolute -left-20 -bottom-20 w-80 h-80 bg-brand-blue/20 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
-          
-          <!-- Vinyl Disc & Show Cover Visual -->
-          <div class="lg:col-span-5 flex justify-center">
-            <div class="relative group">
-              <!-- Vinyl Record -->
-              <div id="vinyl-record" class="w-52 h-52 sm:w-64 sm:h-64 rounded-full record-grooves border-4 border-gray-800 shadow-2xl flex items-center justify-center transition-transform duration-700">
-                <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-brand-gold bg-cover bg-center relative shadow-inner overflow-hidden" id="vinyl-cover" style="background-image: url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=500&q=80');">
-                  <div class="absolute inset-0 bg-black/20"></div>
-                  <div class="w-4 h-4 bg-gray-900 border-2 border-gray-400 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+    <!-- HEADER / NAVBAR -->
+    <header class="bg-[#0f172a]/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('listener')">
+                <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=150&auto=format&fit=crop&q=80" alt="Gazeta FM Logo" class="w-12 h-12 rounded-full border-2 border-red-600 object-cover shadow-lg">
+                <div>
+                    <h1 class="font-extxl text-lg sm:text-xl font-extrabold tracking-wider text-white">GAZETA <span class="text-red-600">FM</span></h1>
+                    <p class="text-[10px] text-slate-400 tracking-widest uppercase">Nacional Player</p>
                 </div>
-              </div>
-
-              <!-- Animated Sound Wave Indicator -->
-              <div id="sound-wave-icon" class="absolute bottom-2 right-2 bg-brand-gold text-black rounded-full p-3 shadow-xl hidden">
-                <i class="fa-solid fa-compact-disc fa-spin text-xl"></i>
-              </div>
             </div>
-          </div>
 
-          <!-- Player Details & Controls -->
-          <div class="lg:col-span-7 space-y-5 text-center lg:text-left">
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">
+                <button onclick="switchView('listener')" class="hover:text-red-500 transition">Início</button>
+                <button onclick="scrollToSection('programacao')" class="hover:text-red-500 transition">Programação</button>
+                <button onclick="scrollToSection('equipe')" class="hover:text-red-500 transition">Equipe</button>
+                <button onclick="scrollToSection('pedir-musica')" class="hover:text-red-500 transition">Pedir Música</button>
+                <button onclick="scrollToSection('ouvintes')" class="hover:text-red-500 transition">Ouvintes</button>
+                <button onclick="scrollToSection('contato')" class="hover:text-red-500 transition">Contato</button>
+            </nav>
+
+            <!-- Status & Login Button -->
+            <div class="flex items-center gap-4">
+                <div id="global-status-badge" class="hidden sm:flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 text-xs font-semibold">
+                    <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span id="status-text">Aguardando TRANSMISSÃO</span>
+                </div>
+                <button onclick="openLoginModal()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition shadow-lg shadow-red-600/30">
+                    <i class="fa-solid fa-signal"></i>
+                    <span class="hidden sm:inline">Área do Locutor</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow">
+
+        <!-- ================= LISTENER VIEW ================= -->
+        <div id="view-listener" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
             
-            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3">
-              <span id="banner-status-tag" class="px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
-                Aguardando TRANSMISSÃO
-              </span>
-              <span class="text-xs text-gray-400 bg-gray-800/80 px-3 py-1 rounded-md border border-gray-700 flex items-center">
-                <i class="fa-solid fa-users text-brand-cyan mr-1.5"></i>
-                <span id="listener-count-display">1 ouvinte conectado</span>
-              </span>
+            <!-- Hero Banner -->
+            <div class="relative rounded-3xl overflow-hidden bg-gradient-to-r from-slate-900 via-slate-800 to-red-950 border border-slate-800 p-6 sm:p-12 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-8">
+                <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#dc2626_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                
+                <div class="relative z-10 space-y-4 max-w-xl text-center lg:text-left">
+                    <div class="inline-flex items-center gap-2 bg-red-600/20 border border-red-600/40 px-3 py-1 rounded-full text-red-400 text-xs font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-tower-broadcast"></i> <span id="hero-status-label">Aguardando TRANSMISSÃO</span>
+                    </div>
+                    <h2 id="hero-show-title" class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">Gazeta FM Nacional Player</h2>
+                    <p class="text-slate-400 text-sm sm:text-base">Sua rádio em todo lugar! Música, informação e muita interação com você 24 horas por dia.</p>
+                    
+                    <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+                        <button onclick="togglePlay()" id="hero-play-btn" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-3 transition shadow-lg shadow-red-600/40">
+                            <i id="hero-play-icon" class="fa-solid fa-play text-lg"></i>
+                            <span id="hero-play-text">Ouvir Rádio Ao Vivo</span>
+                        </button>
+                        <div class="bg-slate-900/80 border border-slate-700/60 px-4 py-2.5 rounded-2xl flex items-center gap-3">
+                            <i class="fa-solid fa-headset text-red-500"></i>
+                            <div class="text-left">
+                                <p class="text-[10px] text-slate-400 uppercase font-semibold">Locutor Atual</p>
+                                <p id="hero-locutor-name" class="text-sm font-bold text-white">Automático / Offline</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vinyl Graphic / Visualizer -->
+                <div class="relative z-10 flex flex-col items-center justify-center">
+                    <div class="relative w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-black border-4 border-slate-800 flex items-center justify-center shadow-2xl">
+                        <div id="vinyl-disc" class="absolute inset-2 rounded-full border border-slate-700/50 bg-[radial-gradient(circle,_#1e293b_0%,_#020617_70%)] flex items-center justify-center">
+                            <div class="w-20 h-20 rounded-full border-2 border-red-600 bg-red-950 flex items-center justify-center shadow-inner overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=150&auto=format&fit=crop&q=80" alt="Logo" class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center gap-1 text-red-500 font-semibold text-xs bg-slate-900/90 px-4 py-1.5 rounded-full border border-slate-800">
+                        <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                        <span id="listener-counter-badge">1 ouvinte conectado</span>
+                    </div>
+                </div>
             </div>
 
-            <div>
-              <h1 id="banner-show-name" class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-                Programação Normal Gazeta
-              </h1>
-              <p class="text-brand-gold font-semibold text-base sm:text-lg mt-1 flex items-center justify-center lg:justify-start">
-                <i class="fa-solid fa-microphone-lines mr-2"></i>
-                <span id="banner-locutor-name">AutoDJ Gazeta</span>
-              </p>
+            <!-- Ticker / Now Playing -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4 overflow-hidden shadow-lg">
+                <div class="bg-red-600 text-white px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-music">></i> Tocando Agora
+                </div>
+                <div class="overflow-hidden whitespace-nowrap w-full">
+                    <p id="now-playing-marquee" class="text-sm text-slate-300 font-medium animate-marquee">Tocando as melhores da Gazeta FM — Conectado com você em todo o Brasil!</p>
+                </div>
             </div>
 
-            <!-- Marquee Song Name Display -->
-            <div class="bg-black/60 border border-gray-800 rounded-xl px-4 py-2.5 overflow-hidden">
-              <div class="whitespace-nowrap inline-block animate-marquee text-sm font-medium text-brand-cyan">
-                <i class="fa-solid fa-music mr-2 text-brand-gold"></i>
-                <span id="banner-marquee-text">Tocando as melhores da Gazeta FM - Grade Automática 24h</span>
-              </div>
+            <!-- Quick Action Cards Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div onclick="scrollToSection('pedir-musica')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-red-600/50 p-6 rounded-3xl transition cursor-pointer group shadow-lg">
+                    <div class="w-12 h-12 rounded-2xl bg-red-600/20 text-red-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-compact-disc"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-lg">Pedir Música</h3>
+                    <p class="text-xs text-slate-400 mt-1">Escolha sua música favorita e mande um recado.</p>
+                </div>
+
+                <div onclick="scrollToSection('ouvintes')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-red-600/50 p-6 rounded-3xl transition cursor-pointer group shadow-lg">
+                    <div class="w-12 h-12 rounded-2xl bg-red-600/20 text-red-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-lg">Chat Ouvintes</h3>
+                    <p class="text-xs text-slate-400 mt-1">Converse em tempo real com a nossa equipe e ouvintes.</p>
+                </div>
+
+                <div onclick="scrollToSection('programacao')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-red-600/50 p-6 rounded-3xl transition cursor-pointer group shadow-lg">
+                    <div class="w-12 h-12 rounded-2xl bg-red-600/20 text-red-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-calendar-days"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-lg">Programação</h3>
+                    <p class="text-xs text-slate-400 mt-1">Confira nossa grade de horários e programas.</p>
+                </div>
+
+                <div onclick="scrollToSection('equipe')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-red-600/50 p-6 rounded-3xl transition cursor-pointer group shadow-lg">
+                    <div class="w-12 h-12 rounded-2xl bg-red-600/20 text-red-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-lg">Equipe</h3>
+                    <p class="text-xs text-slate-400 mt-1">Conheça nossos locutores e apresentadores.</p>
+                </div>
             </div>
 
-            <!-- Player Bar Controls -->
-            <div class="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-              <!-- Play / Pause Main Button -->
-              <button id="btn-play-listener" onclick="togglePlayListener()" class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold bg-gradient-to-r from-brand-gold to-yellow-600 text-black hover:brightness-110 transition shadow-lg shadow-brand-gold/20 flex items-center justify-center text-lg">
-                <i class="fa-solid fa-play mr-3 text-xl" id="play-icon-listener"></i>
-                <span id="play-text-listener">OUVIR AO VIVO</span>
-              </button>
+            <!-- FIQUE LIGADO (Discord Only) -->
+            <div class="bg-gradient-to-r from-indigo-950/60 via-slate-900 to-slate-900 border border-indigo-900/50 rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+                <div>
+                    <span class="text-indigo-400 text-xs font-bold uppercase tracking-widest bg-indigo-950 px-3 py-1 rounded-full border border-indigo-800">Comunidade Oficial</span>
+                    <h3 class="text-2xl font-extrabold text-white mt-2">FIQUE LIGADO NO DISCORD!</h3>
+                    <p class="text-slate-400 text-sm mt-1">Entre no nosso servidor do Discord para participar dos sorteios, falar com os locutores e interagir com a comunidade da Gazeta FM.</p>
+                </div>
+                <a id="discord-link-btn" href="https://discord.gg/gazetafm" target="_blank" class="bg-[#5865F2] hover:bg-[#4752C4] text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-3 transition shadow-lg shadow-[#5865F2]/30 whitespace-nowrap">
+                    <i class="fa-brands fa-discord text-2xl"></i>
+                    <span>Acessar Discord da Rádio</span>
+                </a>
+            </div>
 
-              <!-- Volume Slider -->
-              <div class="flex items-center space-x-3 bg-gray-800/60 px-4 py-3 rounded-xl border border-gray-700/60 w-full sm:w-auto">
-                <button onclick="toggleMuteListener()" class="text-gray-400 hover:text-white transition" id="btn-mute-listener">
-                  <i class="fa-solid fa-volume-high"></i>
+            <!-- Sections for Pedir Música, Chat, Programação, Equipe -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Left 2 Cols: Pedir Música & Programação & Equipe -->
+                <div class="lg:col-span-2 space-y-12">
+                    
+                    <!-- Pedir Música -->
+                    <section id="pedir-musica" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 rounded-xl bg-red-600/20 text-red-500 flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-compact-disc"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Pedir Música</h3>
+                                <p class="text-xs text-slate-400">Preencha o formulário para tocar sua música favorita no ar.</p>
+                            </div>
+                        </div>
+
+                        <form onsubmit="handleSendRequest(event)" class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-400 mb-1">Seu Nome</label>
+                                    <input type="text" id="req-name" required placeholder="Ex: Carlos Silva" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-600">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-400 mb-1">Sua Cidade / Estado</label>
+                                    <input type="text" id="req-city" required placeholder="Ex: São Paulo - SP" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-600">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1">Música e Artista</label>
+                                <input type="text" id="req-song" required placeholder="Ex: Gusttavo Lima - Bloqueado" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-600">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1">Recado / Dedicatória</label>
+                                <textarea id="req-msg" rows="2" placeholder="Mande um abraço para alguém..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-600"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-red-600/30">Enviar Pedido de Música</button>
+                        </form>
+                    </section>
+
+                    <!-- Programação -->
+                    <section id="programacao" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 rounded-xl bg-red-600/20 text-red-500 flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-calendar-days"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Grade de Programação</h3>
+                                <p class="text-xs text-slate-400">Nossa programação diária para você ficar bem informado.</p>
+                            </div>
+                        </div>
+
+                        <div id="public-schedule-list" class="space-y-3">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </section>
+
+                    <!-- Equipe -->
+                    <section id="equipe" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 rounded-xl bg-red-600/20 text-red-500 flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Equipe de Locutores</h3>
+                                <p class="text-xs text-slate-400">Conhecem as vozes que fazem a programação da Gazeta FM.</p>
+                            </div>
+                        </div>
+
+                        <div id="public-team-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </section>
+
+                </div>
+
+                <!-- Right Col: Chat Ouvintes & Contato -->
+                <div class="space-y-8">
+                    
+                    <!-- Chat Ouvintes (Public) -->
+                    <section id="ouvintes" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col h-[520px]">
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-red-600/20 text-red-500 flex items-center justify-center font-bold">
+                                    <i class="fa-solid fa-comments"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-white text-base">Chat Ouvintes</h3>
+                                    <p class="text-[11px] text-slate-400">Interaja com a rádio em tempo real</p>
+                                </div>
+                            </div>
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        </div>
+
+                        <!-- Chat Messages Box -->
+                        <div id="listener-chat-messages" class="flex-grow overflow-y-auto space-y-3 pr-2 text-xs">
+                            <!-- Rendered by JS -->
+                        </div>
+
+                        <!-- Chat Input Form -->
+                        <form onsubmit="handleSendPublicChat(event)" class="mt-4 pt-3 border-t border-slate-800 flex gap-2">
+                            <input type="text" id="public-chat-name" required placeholder="Seu Nome" class="w-1/3 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-red-600">
+                            <input type="text" id="public-chat-msg" required placeholder="Digite sua mensagem..." class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-red-600">
+                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-bold transition">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </section>
+
+                    <!-- Contato / Info -->
+                    <section id="contato" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                        <h4 class="font-bold text-white text-base">Informações da Rádio</h4>
+                        <div class="space-y-3 text-xs text-slate-300">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-location-dot text-red-500 w-5"></i>
+                                <span>São Paulo - SP, Brasil</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-envelope text-red-500 w-5"></i>
+                                <span>contato@gazetafmnacional.com.br</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-globe text-red-500 w-5"></i>
+                                <span>www.gazetafmnacionalplayer.com.br</span>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================= LOGIN MODAL ================= -->
+        <div id="login-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+            <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-8 relative shadow-2xl">
+                <button onclick="closeLoginModal()" class="absolute top-6 right-6 text-slate-400 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
                 </button>
-                <input type="range" id="volume-listener" min="0" max="1" step="0.01" value="0.8" oninput="setVolumeListener(this.value)" class="w-28 accent-brand-gold cursor-pointer">
-              </div>
+
+                <div class="text-center mb-8">
+                    <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=150&auto=format&fit=crop&q=80" alt="Logo" class="w-16 h-16 rounded-full border-2 border-red-600 object-cover mx-auto mb-3 shadow-lg">
+                    <h3 class="text-2xl font-extrabold text-white">Painel do Locutor</h3>
+                    <p class="text-xs text-slate-400 mt-1">Faça seu login para acessar o painel de locução.</p>
+                </div>
+
+                <form onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Usuário</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500"><i class="fa-solid fa-user"></i></span>
+                            <input type="text" id="login-user" autocomplete="new-password" required placeholder="Digite seu usuário" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-11 pr-4 py-3 text-sm text-white focus:outline-none focus:border-red-600">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Senha</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="login-pass" autocomplete="new-password" required placeholder="Digite sua senha" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-11 pr-12 py-3 text-sm text-white focus:outline-none focus:border-red-600">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-red-600/30 mt-2">Entrar no Estúdio</button>
+                </form>
+
+                <div class="mt-6 text-center border-t border-slate-800 pt-4">
+                    <button onclick="closeLoginModal()" class="text-xs text-slate-400 hover:text-white transition">Acessar como Ouvinte</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ================= LOCUTOR / STUDIO ADMIN PANEL ================= -->
+        <div id="view-studio" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            
+            <!-- Studio Top Header -->
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-red-600/20 text-red-500 flex items-center justify-center text-2xl font-bold border border-red-600/40">
+                        <i class="fa-solid fa-microphone-lines"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-2xl font-extrabold text-white">Estúdio Ao Vivo</h2>
+                            <span id="studio-live-indicator" class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">Fora do Ar</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Painel exclusivo de locução e gerenciamento da Gazeta FM</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleTransmission()" id="studio-trans-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition shadow-lg">
+                        <i class="fa-solid fa-play"></i> <span id="studio-trans-btn-text">Iniciar Transmissão</span>
+                    </button>
+
+                    <!-- 3-Dots Menu Dropdown -->
+                    <div class="relative">
+                        <button onclick="toggleStudioMenu()" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition border border-slate-700">
+                            <i class="fa-solid fa-ellipsis-vertical text-lg"></i>
+                        </button>
+                        <div id="studio-dropdown-menu" class="hidden absolute right-0 mt-2 w-60 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl py-2 z-50 text-xs">
+                            <button onclick="openTeamModal(); toggleStudioMenu();" class="w-full text-left px-4 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-users text-red-500 w-4"></i> Editar Equipe de Locutores
+                            </button>
+                            <button onclick="openScheduleModal(); toggleStudioMenu();" class="w-full text-left px-4 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-calendar-days text-red-500 w-4"></i> Editar Grade de Programação
+                            </button>
+                            <button onclick="openDiscordModal(); toggleStudioMenu();" class="w-full text-left px-4 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2">
+                                <i class="fa-brands fa-discord text-red-500 w-4"></i> Configurar Discord
+                            </button>
+                            <div class="border-t border-slate-800 my-1"></div>
+                            <button onclick="handleLogout()" class="w-full text-left px-4 py-2.5 text-red-400 hover:bg-red-600/10 hover:text-red-300 flex items-center gap-2 font-semibold">
+                                <i class="fa-solid fa-right-from-bracket w-4"></i> Sair do Painel
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-          </div>
-        </div>
-      </div>
+            <!-- Program Config & Listeners Stats Bar -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Program & Locutor Details -->
+                <div class="md:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                    <h3 class="font-bold text-white text-base flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-red-500"></i> Informações da Transmissão Atual
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Nome do Locutor</label>
+                            <input type="text" id="config-locutor" placeholder="Ex: DJ Carlos" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Nome do Programa / Show</label>
+                            <input type="text" id="config-show" placeholder="Ex: Tarde Total Gazeta" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-600">
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        <button onclick="saveProgramConfig()" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2 rounded-xl text-xs font-bold transition border border-slate-700">Salvar Dados</button>
+                    </div>
+                </div>
 
-      <!-- DISCORD PROMOTION BANNER -->
-      <div class="bg-gradient-to-r from-indigo-900/40 via-purple-900/30 to-brand-cardBg border border-indigo-500/30 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
-        <div class="flex items-center space-x-4">
-          <div class="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg shadow-indigo-600/30 flex-shrink-0">
-            <i class="fa-brands fa-discord"></i>
-          </div>
-          <div>
-            <h3 class="text-lg font-bold text-white uppercase tracking-wide">FIQUE LIGADO NO NOSSO DISCORD!</h3>
-            <p class="text-sm text-gray-300">Entre na nossa comunidade oficial para conversar com locutores e participar de sorteios exclusivos.</p>
-          </div>
-        </div>
-        <a id="btn-discord-link" href="https://discord.gg/gazetafmnacional" target="_blank" rel="noopener" class="w-full sm:w-auto px-6 py-3 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-lg shadow-indigo-600/20 flex items-center justify-center space-x-2 flex-shrink-0">
-          <i class="fa-brands fa-discord text-xl"></i>
-          <span>Entrar no Discord</span>
-        </a>
-      </div>
-
-    </div>
-
-    <!-- ==================== TAB: PEDIR MÚSICA ==================== -->
-    <div id="tab-pedirmusica" class="tab-content space-y-6 hidden">
-      <div class="max-w-2xl mx-auto bg-brand-cardBg border border-brand-border rounded-2xl p-6 sm:p-8 shadow-2xl">
-        <div class="text-center mb-6">
-          <div class="w-12 h-12 bg-brand-gold/10 text-brand-gold rounded-full flex items-center justify-center mx-auto text-xl mb-3">
-            <i class="fa-solid fa-compact-disc"></i>
-          </div>
-          <h2 class="text-2xl font-bold text-white">Pedir sua Música</h2>
-          <p class="text-sm text-gray-400 mt-1">Envie seu pedido diretamente para a mesa de som do locutor ao vivo!</p>
-        </div>
-
-        <form id="form-pedi-musica" onsubmit="submitSongRequest(event)" class="space-y-4">
-          <div>
-            <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Seu Nome / Apelido</label>
-            <input type="text" id="req-name" required placeholder="Ex: Lucas da Silva" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-gold transition">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Nome da Música e Cantor</label>
-            <input type="text" id="req-song" required placeholder="Ex: Alok - Hear Me Now" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-gold transition">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Recado / Oferecimento (Opcional)</label>
-            <textarea id="req-msg" rows="3" placeholder="Manda um abraço para o pessoal de São Paulo!" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-gold transition"></textarea>
-          </div>
-          <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-brand-gold to-yellow-600 text-black font-bold rounded-xl hover:brightness-110 transition shadow-lg shadow-brand-gold/10">
-            Enviar Pedido de Música
-          </button>
-        </form>
-      </div>
-    </div>
-
-    <!-- ==================== TAB: CHAT OUVINTES ==================== -->
-    <div id="tab-chat" class="tab-content space-y-6 hidden">
-      <div class="max-w-3xl mx-auto bg-brand-cardBg border border-brand-border rounded-2xl flex flex-col h-[600px] shadow-2xl overflow-hidden">
-        
-        <!-- Chat Header -->
-        <div class="px-6 py-4 bg-gray-900/80 border-b border-brand-border flex items-center justify-between">
-          <div class="flex items-center space-x-3">
-            <i class="fa-solid fa-comments text-brand-gold text-xl"></i>
-            <div>
-              <h3 class="font-bold text-white text-base">Bate-Papo da Galera</h3>
-              <p class="text-xs text-gray-400">Interaja com outros ouvintes e com a rádio em tempo real</p>
+                <!-- Stats: Connected Listeners -->
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-white text-base flex items-center gap-2 mb-1">
+                            <i class="fa-solid fa-chart-line text-red-500"></i> Ouvintes Conectados
+                        </h3>
+                        <p class="text-xs text-slate-400">Monitoramento em tempo real</p>
+                    </div>
+                    <div class="my-4 text-center">
+                        <span id="studio-listener-count" class="text-4xl font-extrabold text-red-500">1</span>
+                        <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">Ouvintes ativos</p>
+                    </div>
+                    <div class="bg-slate-950 px-4 py-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <span class="text-slate-400">Status do Servidor:</span>
+                        <span class="text-emerald-400 font-bold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Online</span>
+                    </div>
+                </div>
             </div>
-          </div>
-          <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full font-medium">Ao Vivo</span>
-        </div>
 
-        <!-- Chat Messages Container -->
-        <div id="chat-messages-container" class="flex-grow p-6 overflow-y-auto space-y-4">
-          <!-- Messages will load dynamically -->
-        </div>
+            <!-- Studio Main Controls: Mic + Ducking & Soundboard & Audio Deck -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Left: Microphone, Voice Sensor & Auto-Ducking -->
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-red-600/20 text-red-500 flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-microphone"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-base">Locução ao Vivo (Microfone)</h3>
+                                <p class="text-xs text-slate-400">Controle de voz com Auto-Ducking automático</p>
+                            </div>
+                        </div>
+                        <span id="mic-status-badge" class="px-3 py-1 rounded-full bg-slate-800 text-slate-400 font-bold text-[10px] uppercase">Fechado</span>
+                    </div>
 
-        <!-- Chat Input Form -->
-        <form onsubmit="sendChatMessage(event)" class="p-4 bg-gray-900/90 border-t border-brand-border flex gap-3">
-          <input type="text" id="chat-username" placeholder="Seu Nome" required class="w-1/3 sm:w-1/4 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-brand-gold">
-          <input type="text" id="chat-text" placeholder="Digite sua mensagem..." required class="flex-grow bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-brand-gold">
-          <button type="submit" class="px-5 py-2.5 bg-brand-gold text-black font-bold rounded-xl hover:brightness-110 transition flex items-center justify-center">
-            <i class="fa-solid fa-paper-plane"></i>
-          </button>
-        </form>
+                    <div class="space-y-4">
+                        <div class="flex gap-3">
+                            <button onclick="toggleMicrophone()" id="mic-toggle-btn" class="flex-grow bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-2xl transition flex items-center justify-center gap-2 text-sm shadow-lg shadow-red-600/30">
+                                <i class="fa-solid fa-microphone-slash"></i> <span id="mic-btn-text">Abrir Microfone</span>
+                            </button>
+                        </div>
 
-      </div>
-    </div>
+                        <!-- VU Meters -->
+                        <div class="space-y-2 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                            <div class="flex justify-between text-[11px] text-slate-400 font-semibold">
+                                <span>Sensor de Voz (Mic VU Meter)</span>
+                                <span id="mic-db-text">-inf dB</span>
+                            </div>
+                            <div class="w-full bg-slate-900 h-3 rounded-full overflow-hidden border border-slate-800">
+                                <div id="mic-vu-bar" class="bg-red-600 h-full w-0 transition-all duration-75"></div>
+                            </div>
 
-    <!-- ==================== TAB: PROGRAMAÇÃO ==================== -->
-    <div id="tab-programacao" class="tab-content space-y-6 hidden">
-      <div class="max-w-4xl mx-auto">
-        <div class="text-center mb-8">
-          <h2 class="text-3xl font-extrabold text-white">Grade de Programação</h2>
-          <p class="text-sm text-gray-400 mt-1">Confira os horários dos seus programas favoritos na Gazeta FM</p>
-        </div>
+                            <div class="flex justify-between text-[11px] text-slate-400 font-semibold pt-2">
+                                <span>Sensor de Música / Áudio Master</span>
+                                <span id="master-db-text">Normal</span>
+                            </div>
+                            <div class="w-full bg-slate-900 h-3 rounded-full overflow-hidden border border-slate-800">
+                                <div id="master-vu-bar" class="bg-emerald-500 h-full w-[60%] transition-all duration-75"></div>
+                            </div>
+                        </div>
 
-        <div id="schedule-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Schedule cards loaded dynamically -->
-        </div>
-      </div>
-    </div>
+                        <p class="text-[11px] text-slate-500 italic">* O sistema de Auto-Ducking abaixa automaticamente o volume da música em reprodução quando o microfone é aberto para locução.</p>
+                    </div>
 
-    <!-- ==================== TAB: EQUIPE ==================== -->
-    <div id="tab-equipe" class="tab-content space-y-6 hidden">
-      <div class="max-w-5xl mx-auto">
-        <div class="text-center mb-8">
-          <h2 class="text-3xl font-extrabold text-white">Nossa Equipe de Locutores</h2>
-          <p class="text-sm text-gray-400 mt-1">As vozes que comandam a rádio mais ouvida do Brasil</p>
-        </div>
+                    <!-- Soundboard / Vinhetas Manager -->
+                    <div class="pt-4 border-t border-slate-800 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-bold text-white text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-bolt text-red-500"></i> Vinhetas & Efeitos Sonoros
+                            </h4>
+                            <button onclick="saveJingles()" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition border border-slate-700">Salvar Vinhetas</button>
+                        </div>
 
-        <div id="team-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <!-- Team cards loaded dynamically -->
-        </div>
-      </div>
-    </div>
+                        <div class="flex gap-2">
+                            <input type="file" id="jingle-file-input" accept="audio/*" class="hidden" onchange="handleJingleUpload(event)">
+                            <button onclick="document.getElementById('jingle-file-input').click()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition border border-slate-700">
+                                <i class="fa-solid fa-plus"></i> Adicionar Vinheta (.mp3)
+                            </button>
+                        </div>
 
-    <!-- ==================== TAB: ESTÚDIO DO LOCUTOR / ADMIN ==================== -->
-    <div id="tab-estudio" class="tab-content space-y-6 hidden">
-      
-      <!-- Studio Header / Master Control Bar -->
-      <div class="bg-gradient-to-r from-gray-900 via-brand-cardBg to-gray-900 border border-brand-border rounded-2xl p-6 shadow-2xl space-y-6">
-        
-        <div class="flex flex-col md:flex-row items-center justify-between gap-4 pb-6 border-b border-gray-800">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-brand-red/20 text-brand-red flex items-center justify-center text-lg border border-brand-red/30">
-              <i class="fa-solid fa-sliders"></i>
+                        <div id="jingles-container" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Audio Deck / MP3 Playlist & Chat Interativo -->
+                <div class="space-y-6">
+                    
+                    <!-- Audio Deck / Playlist -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-red-600/20 text-red-500 flex items-center justify-center font-bold">
+                                    <i class="fa-solid fa-music"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-white text-base">Deck de Músicas</h3>
+                                    <p class="text-xs text-slate-400">Adicione e toque qualquer música</p>
+                                </div>
+                            </div>
+                            <input type="file" id="playlist-file-input" accept="audio/*" class="hidden" onchange="handlePlaylistUpload(event)">
+                            <button onclick="document.getElementById('playlist-file-input').click()" class="bg-red-600 hover:bg-red-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-lg shadow-red-600/30">
+                                <i class="fa-solid fa-plus"></i> Adicionar
+                            </button>
+                        </div>
+
+                        <div id="playlist-container" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Studio Live Chat -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4 flex flex-col h-[280px]">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-comments text-red-500"></i> Chat dos Ouvintes (Tempo Real)
+                            </h3>
+                            <span class="text-[11px] text-slate-400">Leitura do Locutor</span>
+                        </div>
+                        <div id="studio-chat-messages" class="flex-grow overflow-y-auto space-y-2 pr-2 text-xs">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </div>
+
+                </div>
+
             </div>
-            <div>
-              <h2 class="text-xl font-bold text-white flex items-center">
-                Mesa de Som & Transmissão Ao Vivo
-              </h2>
-              <p class="text-xs text-gray-400">Controle total da programação, microfones, vinhetas e interação</p>
-            </div>
-          </div>
 
-          <!-- Master Transmission Toggle -->
-          <div class="flex items-center space-x-4">
-            <div class="text-right hidden sm:block">
-              <span class="block text-xs font-semibold text-gray-400">STATUS DA SESSÃO</span>
-              <span id="studio-status-label" class="text-sm font-bold text-yellow-500">Aguardando TRANSMISSÃO</span>
-            </div>
-            <button id="btn-toggle-transmission" onclick="toggleTransmission()" class="px-6 py-3 rounded-xl font-black text-sm uppercase tracking-wider transition-all shadow-lg flex items-center bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-600/20">
-              <i class="fa-solid fa-signal mr-2"></i>
-              <span>INICIAR TRANSMISSÃO</span>
+        </div>
+
+    </main>
+
+
+    <!-- ================= MODALS FOR 3-DOTS & CONFIG ================= -->
+
+    <!-- Modal: Equipe de Locutores -->
+    <div id="modal-team" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-xl rounded-3xl p-6 sm:p-8 relative shadow-2xl max-h-[90vh] flex flex-col">
+            <button onclick="closeTeamModal()" class="absolute top-6 right-6 text-slate-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
             </button>
-          </div>
-        </div>
+            <h3 class="text-xl font-bold text-white mb-2">Editar Equipe de Locutores</h3>
+            <p class="text-xs text-slate-400 mb-6">Adicione ou remova locutores da equipe da rádio.</p>
 
-        <!-- Active Program Info Editor -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Nome do Programa</label>
-            <input type="text" id="studio-input-showname" value="Manhã Gazeta FM" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Locutor em Turno</label>
-            <input type="text" id="studio-input-locutor" value="DJ Carlos Silva" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">URL Capa / Avatar do Programa</label>
-            <div class="flex space-x-2">
-              <input type="text" id="studio-input-cover" value="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=500&q=80" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-gold">
-              <button onclick="saveStudioProgramInfo()" class="px-4 py-2.5 bg-brand-gold text-black font-bold rounded-xl hover:brightness-110 text-xs flex items-center">
-                Salvar
-              </button>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- STUDIO MAIN WORKSPACE (2 COLUMNS) -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        <!-- LEFT COLUMN: MICROPHONE & AUDIO DECKS (7 COLS) -->
-        <div class="lg:col-span-7 space-y-6">
-          
-          <!-- MICROPHONE & AUTO-DUCKING PANEL -->
-          <div class="bg-brand-cardBg border border-brand-border rounded-2xl p-6 shadow-2xl space-y-5">
-            <div class="flex items-center justify-between border-b border-gray-800 pb-4">
-              <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-microphone text-brand-red text-xl"></i>
-                <h3 class="font-bold text-white text-base">Microfone & Modulação de Voz</h3>
-              </div>
-              <span class="text-xs bg-gray-800 text-gray-300 px-3 py-1 rounded-md font-mono border border-gray-700">
-                Auto-Ducking Ativo
-              </span>
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="new-team-name" placeholder="Nome do Locutor" class="w-1/2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-red-600">
+                <input type="text" id="new-team-show" placeholder="Nome do Programa" class="w-1/2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-red-600">
+                <button onclick="addTeamMember()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition">Adicionar</button>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-              <!-- Mic Toggle Button -->
-              <button id="btn-toggle-mic" onclick="toggleMicrophone()" class="w-full py-4 rounded-xl font-bold text-sm bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 transition flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-microphone-slash text-lg" id="mic-icon"></i>
-                <span id="mic-text">Abrir Microfone</span>
-              </button>
+            <div id="modal-team-list" class="flex-grow overflow-y-auto space-y-2 pr-1 mb-6">
+                <!-- Rendered by JS -->
+            </div>
 
-              <!-- VU Meter Visualizer -->
-              <div class="space-y-1.5">
-                <div class="flex justify-between text-xs font-semibold text-gray-400">
-                  <span>SENSOR DE VOZ (VU METER)</span>
-                  <span id="vu-level-percent">0%</span>
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                <button onclick="closeTeamModal()" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition">Fechar</button>
+                <button onclick="saveTeamData()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold transition shadow-lg shadow-red-600/30">Salvar Equipe</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Grade de Programação -->
+    <div id="modal-schedule" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-xl rounded-3xl p-6 sm:p-8 relative shadow-2xl max-h-[90vh] flex flex-col">
+            <button onclick="closeScheduleModal()" class="absolute top-6 right-6 text-slate-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="text-xl font-bold text-white mb-2">Editar Grade de Programação</h3>
+            <p class="text-xs text-slate-400 mb-6">Gerencie os horários e programas da rádio.</p>
+
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="new-sch-time" placeholder="Horário (Ex: 08:00 - 12:00)" class="w-1/3 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-red-600">
+                <input type="text" id="new-sch-title" placeholder="Nome do Programa" class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-red-600">
+                <button onclick="addScheduleItem()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition">Adicionar</button>
+            </div>
+
+            <div id="modal-schedule-list" class="flex-grow overflow-y-auto space-y-2 pr-1 mb-6">
+                <!-- Rendered by JS -->
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                <button onclick="closeScheduleModal()" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition">Fechar</button>
+                <button onclick="saveScheduleData()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold transition shadow-lg shadow-red-600/30">Salvar Programação</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Configurar Discord -->
+    <div id="modal-discord" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-6 sm:p-8 relative shadow-2xl">
+            <button onclick="closeDiscordModal()" class="absolute top-6 right-6 text-slate-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="text-xl font-bold text-white mb-2">Configurar Discord</h3>
+            <p class="text-xs text-slate-400 mb-6">Insira o link oficial do servidor do Discord da rádio.</p>
+
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Link do Convite do Discord</label>
+                    <input type="text" id="config-discord-url" placeholder="https://discord.gg/seu-convite" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-red-600">
                 </div>
-                <div class="h-5 bg-gray-900 border border-gray-800 rounded-lg p-1 flex items-center space-x-1">
-                  <!-- VU Bars -->
-                  <div class="h-full flex-1 rounded-sm bg-gray-800 transition-all duration-75" id="vu-bar-1"></div>
-                  <div class="h-full flex-1 rounded-sm bg-gray-800 transition-all duration-75" id="vu-bar-2"></div>
-                  <div class="h-full flex-1 rounded-sm bg-gray-800 transition-all duration-75" id="vu-bar-3"></div>
-                  <div class="h-full flex-1 rounded-sm bg-gray-800 transition-all duration-75" id="vu-bar-4"></div>
-                  <div class="h-full flex-1 rounded-sm bg-gray-800 transition-all duration-75" id="vu-bar-5"></div>
-                  <div class="h-full flex-1 rounded-sm bg-gray-800 transition-all duration-75" id="vu-bar-6"></div>
-                  <div class="h-full flex-1 rounded-sm bg-gray-800 transition-all duration-75" id="vu-bar-7"></div>
-                  <div class="h-full flex-1 rounded-sm bg-gray-800 transition-all duration-75" id="vu-bar-8"></div>
-                  <div class="h-full flex-1 rounded-sm bg-gray-800 transition-all duration-75" id="vu-bar-9"></div>
-                  <div class="h-full flex-1 rounded-sm bg-gray-800 transition-all duration-75" id="vu-bar-10"></div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                <button onclick="closeDiscordModal()" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition">Fechar</button>
+                <button onclick="saveDiscordData()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold transition shadow-lg shadow-red-600/30">Salvar Dados</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- STICKY BOTTOM PLAYER BAR -->
+    <footer class="bg-[#0f172a]/95 backdrop-blur-md border-t border-slate-800 sticky bottom-0 z-30 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                <div class="w-12 h-12 rounded-xl overflow-hidden border border-slate-700 bg-slate-800 flex-shrink-0">
+                    <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=150&auto=format&fit=crop&q=80" alt="Cover" class="w-full h-full object-cover">
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- SOUNDBOARD & VINHETAS / EFEITOS -->
-          <div class="bg-brand-cardBg border border-brand-border rounded-2xl p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between border-b border-gray-800 pb-4">
-              <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-drum text-brand-gold text-xl"></i>
-                <h3 class="font-bold text-white text-base">Soundboard & Vinhetas Rrápidas</h3>
-              </div>
-              <button onclick="triggerSaveJinglesToast()" class="px-3.5 py-1.5 bg-brand-gold/10 text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/20 rounded-lg text-xs font-bold transition">
-                <i class="fa-solid fa-floppy-disk mr-1"></i> Salvar Vinhetas
-              </button>
-            </div>
-
-            <!-- Upload Custom Jingle File -->
-            <div class="flex flex-col sm:flex-row gap-3">
-              <input type="text" id="jingle-name-input" placeholder="Nome da Vinheta / Efeito" class="bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2 text-xs text-white flex-grow focus:outline-none focus:border-brand-gold">
-              <input type="file" id="jingle-file-input" accept="audio/*" class="hidden" onchange="handleAddJingleFile(event)">
-              <button onclick="document.getElementById('jingle-file-input').click()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 text-xs font-bold rounded-xl transition flex items-center justify-center">
-                <i class="fa-solid fa-plus mr-1.5"></i> Adicionar Áudio (.mp3)
-              </button>
-            </div>
-
-            <!-- Jingles Grid -->
-            <div id="jingles-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              <!-- Jingles rendered dynamically -->
-            </div>
-          </div>
-
-          <!-- MUSIC PLAYLIST DECK -->
-          <div class="bg-brand-cardBg border border-brand-border rounded-2xl p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between border-b border-gray-800 pb-4">
-              <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-list-check text-brand-cyan text-xl"></i>
-                <h3 class="font-bold text-white text-base">Deck de Músicas & Fila de Reprodução</h3>
-              </div>
-              <span id="deck-status-indicator" class="text-xs text-gray-400 font-mono">Parado</span>
-            </div>
-
-            <!-- Add Song to Deck -->
-            <div class="flex flex-col sm:flex-row gap-3">
-              <input type="file" id="deck-file-input" accept="audio/*" multiple class="hidden" onchange="handleAddDeckSongs(event)">
-              <button onclick="document.getElementById('deck-file-input').click()" class="w-full py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 text-xs font-bold rounded-xl transition flex items-center justify-center">
-                <i class="fa-solid fa-folder-plus mr-2 text-brand-gold"></i> Importar Músicas para o Deck
-              </button>
-            </div>
-
-            <!-- Deck Music List -->
-            <div id="deck-music-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-              <!-- Songs listed dynamically -->
-            </div>
-
-            <!-- Deck Controls Bar -->
-            <div class="pt-2 flex items-center justify-between border-t border-gray-800">
-              <div class="flex items-center space-x-2">
-                <button onclick="playDeckNext()" class="p-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition" title="Próxima Música">
-                  <i class="fa-solid fa-forward-step"></i>
+                <div>
+                    <h4 id="sticky-song-title" class="text-sm font-bold text-white truncate max-w-[200px] sm:max-w-xs">Gazeta FM Nacional Player</h4>
+                    <p id="sticky-locutor-name" class="text-xs text-slate-400">Ao Vivo 24 Horas</p>
+                </div>
+                <button onclick="togglePlay()" class="sm:hidden w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg">
+                    <i id="sticky-play-icon-mobile" class="fa-solid fa-play"></i>
                 </button>
-                <button id="btn-deck-playpause" onclick="toggleDeckPlayPause()" class="px-5 py-2.5 bg-brand-cyan text-black font-bold text-xs rounded-xl hover:brightness-110 transition flex items-center">
-                  <i class="fa-solid fa-play mr-1.5" id="deck-play-icon"></i>
-                  <span id="deck-play-text">Tocar Fila</span>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button onclick="togglePlay()" class="hidden sm:flex w-12 h-12 rounded-full bg-red-600 hover:bg-red-700 text-white items-center justify-center shadow-lg shadow-red-600/30 transition transform hover:scale-105">
+                    <i id="sticky-play-icon" class="fa-solid fa-play text-lg"></i>
                 </button>
-              </div>
-              <span class="text-xs text-gray-500 italic">Transição Suave (Crossfade)</span>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- RIGHT COLUMN: CHAT INTERATIVO & PEDIDOS DE MÚSICA (5 COLS) -->
-        <div class="lg:col-span-5 space-y-6">
-          
-          <!-- SONG REQUESTS MANAGER -->
-          <div class="bg-brand-cardBg border border-brand-border rounded-2xl p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between border-b border-gray-800 pb-3">
-              <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-envelope-open-text text-brand-gold text-lg"></i>
-                <h3 class="font-bold text-white text-base">Pedidos dos Ouvintes</h3>
-              </div>
-              <span id="request-count-badge" class="px-2.5 py-0.5 bg-brand-gold/10 text-brand-gold text-xs font-bold rounded-full border border-brand-gold/20">0 novos</span>
             </div>
 
-            <div id="studio-requests-list" class="space-y-3 max-h-72 overflow-y-auto pr-1">
-              <!-- Requests rendered dynamically -->
-            </div>
-          </div>
-
-          <!-- INTEGRATED STUDIO CHAT FEED -->
-          <div class="bg-brand-cardBg border border-brand-border rounded-2xl p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between border-b border-gray-800 pb-3">
-              <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-comments text-brand-cyan text-lg"></i>
-                <h3 class="font-bold text-white text-base">Chat dos Ouvintes (Estúdio)</h3>
-              </div>
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <i class="fa-solid fa-volume-high text-slate-400 text-sm"></i>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.8" oninput="changeVolume(this.value)" class="w-24 sm:w-32 accent-red-600 cursor-pointer">
             </div>
 
-            <div id="studio-chat-feed" class="space-y-3 h-72 overflow-y-auto pr-1 bg-gray-900/50 p-3 rounded-xl border border-gray-800">
-              <!-- Chat messages feed -->
-            </div>
-
-            <!-- Studio Fast Response -->
-            <form onsubmit="sendStudioChatMessage(event)" class="flex gap-2">
-              <input type="text" id="studio-chat-input" placeholder="Responder como Locutor..." class="flex-grow bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
-              <button type="submit" class="px-4 py-2 bg-brand-gold text-black font-bold text-xs rounded-xl hover:brightness-110 transition">
-                Enviar
-              </button>
-            </form>
-          </div>
-
         </div>
-
-      </div>
-
-    </div>
-
-  </main>
-
-  <!-- ==================== FOOTER ==================== -->
-  <footer class="bg-brand-cardBg border-t border-brand-border py-6 mt-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-center space-x-3">
-        <div class="w-8 h-8 rounded-full border border-brand-gold bg-black flex items-center justify-center text-brand-gold font-black text-xs">
-          G
-        </div>
-        <p class="text-xs text-gray-400">
-          © <span id="footer-year">2026</span> <strong class="text-white">Gazeta FM Nacional Player</strong>. Todos os direitos reservados.
-        </p>
-      </div>
-      <div class="flex items-center space-x-4 text-xs text-gray-400">
-        <span class="flex items-center text-brand-gold">
-          <i class="fa-solid fa-shield-halved mr-1"></i> Transmissão Criptografada SSL
-        </span>
-      </div>
-    </div>
-  </footer>
-
-  <!-- ==================== LOGIN MODAL ==================== -->
-  <div id="modal-login" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-brand-cardBg border border-brand-border rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative">
-      <button onclick="closeModal('modal-login')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-
-      <div class="text-center mb-6">
-        <div class="w-14 h-14 bg-brand-gold/10 text-brand-gold border border-brand-gold/20 rounded-2xl flex items-center justify-center mx-auto text-2xl mb-3 shadow-lg shadow-brand-gold/10">
-          <i class="fa-solid fa-lock"></i>
-        </div>
-        <h3 class="text-xl font-bold text-white">Acesso Restrito ao Estúdio</h3>
-        <p class="text-xs text-gray-400 mt-1">Área exclusiva para locutores e equipe da Gazeta FM</p>
-      </div>
-
-      <form onsubmit="handleLoginSubmit(event)" class="space-y-4" autocomplete="off">
-        <div>
-          <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Usuário</label>
-          <input type="text" id="login-username" autocomplete="off" required placeholder="Digite seu usuário" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-gold">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Senha</label>
-          <input type="password" id="login-password" autocomplete="off" required placeholder="••••••••" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-gold">
-        </div>
-
-        <div id="login-error-msg" class="text-xs text-red-400 text-center hidden">
-          Usuário ou senha incorretos!
-        </div>
-
-        <button type="submit" class="w-full py-3 bg-gradient-to-r from-brand-gold to-yellow-600 text-black font-bold rounded-xl hover:brightness-110 transition shadow-lg shadow-brand-gold/10 text-sm">
-          Acessar Painel do Locutor
-        </button>
-
-        <div class="pt-2 text-center">
-          <button type="button" onclick="closeModal('modal-login')" class="text-xs text-gray-400 hover:text-white transition">
-            <i class="fa-solid fa-arrow-left mr-1"></i> Acessar como Ouvinte
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL: EDITAR EQUIPE ==================== -->
-  <div id="modal-equipe" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-brand-cardBg border border-brand-border rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative space-y-4">
-      <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-        <h3 class="text-lg font-bold text-white flex items-center">
-          <i class="fa-solid fa-user-gear text-brand-cyan mr-2"></i> Editar Equipe de Locutores
-        </h3>
-        <button onclick="closeModal('modal-equipe')" class="text-gray-400 hover:text-white">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <!-- Add New Member Form -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <input type="text" id="add-team-name" placeholder="Nome do Locutor" class="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white">
-        <input type="text" id="add-team-role" placeholder="Cargo / Horário" class="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white">
-        <input type="text" id="add-team-photo" placeholder="URL da Foto" class="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white">
-      </div>
-      <button onclick="addTeamMember()" class="w-full py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white text-xs font-bold rounded-xl transition">
-        <i class="fa-solid fa-plus mr-1"></i> Adicionar à Equipe
-      </button>
-
-      <!-- Team List -->
-      <div id="edit-team-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-        <!-- Dynamic list -->
-      </div>
-
-      <div class="pt-2 flex justify-end">
-        <button onclick="saveTeamChanges()" class="px-6 py-2.5 bg-brand-gold text-black font-bold text-xs rounded-xl hover:brightness-110 shadow-lg shadow-brand-gold/10">
-          Salvar Equipe
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL: EDITAR PROGRAMAÇÃO ==================== -->
-  <div id="modal-programacao" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-brand-cardBg border border-brand-border rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative space-y-4">
-      <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-        <h3 class="text-lg font-bold text-white flex items-center">
-          <i class="fa-solid fa-calendar-pen text-brand-gold mr-2"></i> Editar Grade de Programação
-        </h3>
-        <button onclick="closeModal('modal-programacao')" class="text-gray-400 hover:text-white">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <input type="text" id="add-prog-time" placeholder="Horário (Ex: 08:00 - 12:00)" class="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white">
-        <input type="text" id="add-prog-title" placeholder="Nome do Programa" class="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white">
-        <input type="text" id="add-prog-host" placeholder="Apresentador" class="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white">
-      </div>
-      <button onclick="addScheduleSlot()" class="w-full py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white text-xs font-bold rounded-xl transition">
-        <i class="fa-solid fa-plus mr-1"></i> Adicionar Horário
-      </button>
-
-      <div id="edit-schedule-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-        <!-- Dynamic list -->
-      </div>
-
-      <div class="pt-2 flex justify-end">
-        <button onclick="saveScheduleChanges()" class="px-6 py-2.5 bg-brand-gold text-black font-bold text-xs rounded-xl hover:brightness-110 shadow-lg shadow-brand-gold/10">
-          Salvar Programação
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL: CONFIGURAR DISCORD ==================== -->
-  <div id="modal-discord" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-brand-cardBg border border-brand-border rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
-      <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-        <h3 class="text-lg font-bold text-white flex items-center">
-          <i class="fa-brands fa-discord text-indigo-400 mr-2"></i> Configurar Link do Discord
-        </h3>
-        <button onclick="closeModal('modal-discord')" class="text-gray-400 hover:text-white">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">URL Convite do Discord</label>
-        <input type="url" id="discord-url-input" value="https://discord.gg/gazetafmnacional" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-gold">
-      </div>
-
-      <div class="pt-2 flex justify-end">
-        <button onclick="saveDiscordLink()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-indigo-600/20">
-          Salvar Discord
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- TOAST NOTIFICATION CONTAINER -->
-  <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
-
-  <!-- APPLICATION LOGIC & JAVASCRIPT -->
-  <script>
-    /* ==========================================================================
-       STATE & INITIAL CONFIGURATION
-       ========================================================================== */
-    const BROADCAST_CHANNEL_NAME = 'gazeta_fm_channel';
-    const channel = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
-
-    // Initial Data Defaults
-    const defaultState = {
-      isLive: false,
-      showName: "Programação Normal Gazeta",
-      locutorName: "AutoDJ Gazeta",
-      coverUrl: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=500&q=80",
-      currentSong: "Tocando as melhores da Gazeta FM - Grade Automática 24h",
-      discordUrl: "https://discord.gg/gazetafmnacional",
-      schedule: [
-        { time: "06:00 - 09:00", title: "Café com Notícias", host: "Marcos Paulo" },
-        { time: "09:00 - 12:00", title: "Manhã Gazeta FM", host: "DJ Carlos Silva" },
-        { time: "12:00 - 15:00", title: "Tarde Sertaneja", host: "Ana Beatriz" },
-        { time: "15:00 - 18:00", title: "As Melhores da Tarde", host: "Lucas Mendes" },
-        { time: "18:00 - 22:00", title: "Night Hits Gazeta", host: "Roberto Lima" }
-      ],
-      team: [
-        { name: "DJ Carlos Silva", role: "Locutor Principal", photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80" },
-        { name: "Ana Beatriz", role: "Apresentadora Tarde", photo: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&q=80" },
-        { name: "Marcos Paulo", role: "Jornalismo & Notícias", photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&q=80" }
-      ],
-      chatMessages: [
-        { user: "RadioBot", text: "Bem-vindos à Gazeta FM Nacional!", time: "12:00", isOfficial: true },
-        { user: "Fernando_SP", text: "A melhor rádio de São Paulo! Toca uma do Alok!", time: "12:02" }
-      ],
-      requests: []
-    };
-
-    // Global Working Memory State
-    let appData = loadStateFromStorage();
-    let isUserLoggedIn = false;
-    let listenerCount = 1;
-
-    // Web Audio & Stream Variables
-    let audioContext = null;
-    let micStream = null;
-    let micAnalyser = null;
-    let micAnimationId = null;
-    let isMicOpen = false;
-
-    // Soundboard & Deck Audio Storage
-    let jinglesList = []; // Array of { id, name, audioObj, fileUrl }
-    let deckSongsList = []; // Array of { id, title, fileUrl, audioObj }
-    let currentDeckIndex = -1;
-    let isDeckPlaying = false;
-
-    // Listener Audio Simulation
-    let listenerAudioObj = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
-    listenerAudioObj.loop = true;
-    let isListenerPlaying = false;
-
-    /* ==========================================================================
-       LOCAL STORAGE PERSISTENCE
-       ========================================================================== */
-    function loadStateFromStorage() {
-      const saved = localStorage.getItem('gazeta_fm_app_data');
-      if (saved) {
-        try {
-          return { ...defaultState, ...JSON.parse(saved) };
-        } catch(e) {
-          return defaultState;
-        }
-      }
-      return defaultState;
-    }
-
-    function saveStateToStorage() {
-      localStorage.setItem('gazeta_fm_app_data', JSON.stringify({
-        isLive: appData.isLive,
-        showName: appData.showName,
-        locutorName: appData.locutorName,
-        coverUrl: appData.coverUrl,
-        currentSong: appData.currentSong,
-        discordUrl: appData.discordUrl,
-        schedule: appData.schedule,
-        team: appData.team,
-        chatMessages: appData.chatMessages,
-        requests: appData.requests
-      }));
-      broadcastUpdate();
-    }
-
-    function broadcastUpdate() {
-      channel.postMessage({ type: 'STATE_UPDATE', state: appData });
-    }
-
-    /* ==========================================================================
-       INITIALIZATION & INTERFACE SYNC
-       ========================================================================== */
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('footer-year').textContent = new Date().getFullYear();
-      
-      // Calculate active listener count across tabs
-      initListenerCounter();
-
-      // Initial Interface Render
-      renderAll();
-
-      // Listen to cross-tab updates
-      channel.onmessage = (event) => {
-        if (event.data.type === 'STATE_UPDATE') {
-          appData = event.data.state;
-          renderAll();
-        } else if (event.data.type === 'PING_LISTENERS') {
-          channel.postMessage({ type: 'PONG_LISTENERS' });
-        }
-      };
-    });
-
-    function renderAll() {
-      updateLiveStatusUI();
-      renderSchedule();
-      renderTeam();
-      renderChat();
-      renderRequests();
-      renderJinglesGrid();
-      renderDeckMusicList();
-      
-      // Update Discord link
-      const btnDisc = document.getElementById('btn-discord-link');
-      if (btnDisc) btnDisc.href = appData.discordUrl || defaultState.discordUrl;
-      const inputDisc = document.getElementById('discord-url-input');
-      if (inputDisc) inputDisc.value = appData.discordUrl || defaultState.discordUrl;
-    }
-
-    /* ==========================================================================
-       REAL-TIME LISTENER COUNTER ACROSS TABS
-       ========================================================================== */
-    function initListenerCounter() {
-      let activeTabs = 1;
-      
-      // Send ping to other open tabs
-      channel.postMessage({ type: 'PING_LISTENERS' });
-
-      channel.addEventListener('message', (event) => {
-        if (event.data.type === 'PONG_LISTENERS') {
-          activeTabs++;
-          updateListenerDisplay(activeTabs);
-        }
-      });
-
-      // Periodically announce presence
-      setInterval(() => {
-        updateListenerDisplay(activeTabs);
-      }, 5000);
-    }
-
-    function updateListenerDisplay(count) {
-      listenerCount = count;
-      const text = count === 1 ? '1 ouvinte conectado' : `${count} ouvintes conectados`;
-      document.getElementById('listener-count-display').textContent = text;
-    }
-
-    /* ==========================================================================
-       NAVIGATION & TAB SWITCHING
-       ========================================================================== */
-    function switchTab(tabId) {
-      // Hide all contents
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      
-      // Show targeted tab
-      const target = document.getElementById(`tab-${tabId}`);
-      if (target) target.classList.remove('hidden');
-
-      // Update Nav Buttons Highlight
-      const navButtons = document.querySelectorAll('#nav-listener button');
-      navButtons.forEach(btn => {
-        btn.className = "px-4 py-2 rounded-lg font-medium text-sm text-gray-300 hover:text-white hover:bg-gray-800 transition-all duration-200";
-      });
-
-      const activeNav = document.getElementById(`nav-btn-${tabId}`);
-      if (activeNav) {
-        activeNav.className = "px-4 py-2 rounded-lg font-medium text-sm text-brand-gold bg-brand-gold/10 border border-brand-gold/20 transition-all duration-200";
-      }
-
-      // Close studio dropdown if open
-      document.getElementById('studio-dropdown').classList.add('hidden');
-    }
-
-    /* ==========================================================================
-       LIVE TRANSMISSION & UI STATUS SYNC
-       ========================================================================== */
-    function updateLiveStatusUI() {
-      const headerBadge = document.getElementById('header-status-badge');
-      const headerText = document.getElementById('header-status-text');
-      const bannerTag = document.getElementById('banner-status-tag');
-      const bannerShow = document.getElementById('banner-show-name');
-      const bannerLocutor = document.getElementById('banner-locutor-name');
-      const bannerMarquee = document.getElementById('banner-marquee-text');
-      const vinylCover = document.getElementById('vinyl-cover');
-      const studioStatusLabel = document.getElementById('studio-status-label');
-      const btnToggleTrans = document.getElementById('btn-toggle-transmission');
-
-      if (appData.isLive) {
-        // LIVE STATE
-        headerBadge.className = "flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-red-500/10 text-red-500 border border-red-500/30 animate-pulse-glow";
-        headerText.textContent = "TRANSMISSÃO AO VIVO";
-
-        bannerTag.className = "px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse";
-        bannerTag.textContent = "TRANSMISSÃO AO VIVO";
-
-        bannerShow.textContent = appData.showName;
-        bannerLocutor.textContent = appData.locutorName;
-        bannerMarquee.textContent = `AO VIVO NA GAZETA FM: ${appData.showName} com ${appData.locutorName}`;
-        vinylCover.style.backgroundImage = `url('${appData.coverUrl}')`;
-
-        if (studioStatusLabel) {
-          studioStatusLabel.textContent = "TRANSMISSÃO AO VIVO";
-          studioStatusLabel.className = "text-sm font-bold text-red-500 animate-pulse";
-        }
-        if (btnToggleTrans) {
-          btnToggleTrans.className = "px-6 py-3 rounded-xl font-black text-sm uppercase tracking-wider transition-all shadow-lg flex items-center bg-red-600 hover:bg-red-500 text-white shadow-red-600/20";
-          btnToggleTrans.innerHTML = `<i class="fa-solid fa-power-off mr-2"></i><span>FECHAR TRANSMISSÃO</span>`;
-        }
-      } else {
-        // OFFLINE STATE
-        headerBadge.className = "flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/30";
-        headerText.textContent = "Aguardando TRANSMISSÃO";
-
-        bannerTag.className = "px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-yellow-500/20 text-yellow-400 border border-yellow-500/30";
-        bannerTag.textContent = "Aguardando TRANSMISSÃO";
-
-        bannerShow.textContent = "Programação Normal Gazeta";
-        bannerLocutor.textContent = "AutoDJ Gazeta";
-        bannerMarquee.textContent = "Tocando as melhores da Gazeta FM - Grade Automática 24h";
-        vinylCover.style.backgroundImage = `url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=500&q=80')`;
-
-        if (studioStatusLabel) {
-          studioStatusLabel.textContent = "Aguardando TRANSMISSÃO";
-          studioStatusLabel.className = "text-sm font-bold text-yellow-500";
-        }
-        if (btnToggleTrans) {
-          btnToggleTrans.className = "px-6 py-3 rounded-xl font-black text-sm uppercase tracking-wider transition-all shadow-lg flex items-center bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20";
-          btnToggleTrans.innerHTML = `<i class="fa-solid fa-signal mr-2"></i><span>INICIAR TRANSMISSÃO</span>`;
-        }
-      }
-    }
-
-    function toggleTransmission() {
-      appData.isLive = !appData.isLive;
-      saveStateToStorage();
-      renderAll();
-      showToast(appData.isLive ? "Transmissão ao vivo INICIADA!" : "Transmissão ENCERRADA.");
-    }
-
-    function saveStudioProgramInfo() {
-      const show = document.getElementById('studio-input-showname').value.trim();
-      const locutor = document.getElementById('studio-input-locutor').value.trim();
-      const cover = document.getElementById('studio-input-cover').value.trim();
-
-      if (show) appData.showName = show;
-      if (locutor) appData.locutorName = locutor;
-      if (cover) appData.coverUrl = cover;
-
-      saveStateToStorage();
-      renderAll();
-      showToast("Salvo com sucesso!");
-    }
-
-    /* ==========================================================================
-       LISTENER AUDIO PLAYER
-       ========================================================================== */
-    function togglePlayListener() {
-      const vinyl = document.getElementById('vinyl-record');
-      const wave = document.getElementById('sound-wave-icon');
-      const playIcon = document.getElementById('play-icon-listener');
-      const playText = document.getElementById('play-text-listener');
-
-      if (!isListenerPlaying) {
-        listenerAudioObj.play().then(() => {
-          isListenerPlaying = true;
-          vinyl.classList.add('animate-spin-slow');
-          wave.classList.remove('hidden');
-          playIcon.className = "fa-solid fa-pause mr-3 text-xl";
-          playText.textContent = "PAUSAR AÁUDIO";
-        }).catch(err => {
-          showToast("Erro ao iniciar áudio ao vivo.");
-        });
-      } else {
-        listenerAudioObj.pause();
-        isListenerPlaying = false;
-        vinyl.classList.remove('animate-spin-slow');
-        wave.classList.add('hidden');
-        playIcon.className = "fa-solid fa-play mr-3 text-xl";
-        playText.textContent = "OUVIR AO VIVO";
-      }
-    }
-
-    function setVolumeListener(val) {
-      listenerAudioObj.volume = parseFloat(val);
-    }
-
-    function toggleMuteListener() {
-      const btn = document.getElementById('btn-mute-listener');
-      listenerAudioObj.muted = !listenerAudioObj.muted;
-      btn.innerHTML = listenerAudioObj.muted 
-        ? `<i class="fa-solid fa-volume-xmark text-red-400"></i>` 
-        : `<i class="fa-solid fa-volume-high"></i>`;
-    }
-
-    /* ==========================================================================
-       AUTHENTICATION & STUDIO ACCESS
-       ========================================================================== */
-    function openLoginModal() {
-      if (isUserLoggedIn) {
-        switchTab('estudio');
-      } else {
-        document.getElementById('login-username').value = '';
-        document.getElementById('login-password').value = '';
-        document.getElementById('login-error-msg').classList.add('hidden');
-        openModal('modal-login');
-      }
-    }
-
-    function handleLoginSubmit(event) {
-      event.preventDefault();
-      const u = document.getElementById('login-username').value.trim();
-      const p = document.getElementById('login-password').value.trim();
-
-      // Clean authentication without saved hardcoded passwords
-      if (u !== '' && p !== '') {
-        isUserLoggedIn = true;
-        closeModal('modal-login');
-        
-        // Show Studio dropdown menu
-        document.getElementById('studio-menu-container').classList.remove('hidden');
-        document.getElementById('btn-access-portal').innerHTML = `<i class="fa-solid fa-sliders mr-2"></i><span>Painel Estúdio</span>`;
-
-        // Switch directly to Studio view
-        switchTab('estudio');
-        showToast("Bem-vindo ao Estúdio Gazeta FM!");
-      } else {
-        document.getElementById('login-error-msg').classList.remove('hidden');
-      }
-    }
-
-    function logoutStudio() {
-      isUserLoggedIn = false;
-      document.getElementById('studio-menu-container').classList.add('hidden');
-      document.getElementById('btn-access-portal').innerHTML = `<i class="fa-solid fa-radio mr-2"></i><span>Estúdio Ao Vivo</span>`;
-      switchTab('inicio');
-      showToast("Você saiu do painel.");
-    }
-
-    function toggleStudioDropdown() {
-      const dropdown = document.getElementById('studio-dropdown');
-      dropdown.classList.toggle('hidden');
-    }
-
-    /* ==========================================================================
-       MICROPHONE & AUTO-DUCKING SYSTEM (WEB AUDIO API)
-       ========================================================================== */
-    async function toggleMicrophone() {
-      const btnMic = document.getElementById('btn-toggle-mic');
-      const micIcon = document.getElementById('mic-icon');
-      const micText = document.getElementById('mic-text');
-
-      if (!isMicOpen) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          micStream = stream;
-
-          if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          }
-
-          const source = audioContext.createMediaStreamSource(stream);
-          micAnalyser = audioContext.createAnalyser();
-          micAnalyser.fftSize = 64;
-          source.connect(micAnalyser);
-
-          isMicOpen = true;
-          btnMic.className = "w-full py-4 rounded-xl font-bold text-sm bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/30 border border-red-500 transition flex items-center justify-center space-x-2 animate-pulse";
-          micIcon.className = "fa-solid fa-microphone text-lg";
-          micText.textContent = "Microfone ABERTO";
-
-          startVUMeter();
-          showToast("Microfone ABERTO!");
-
-        } catch (err) {
-          showToast("Erro ao acessar microfone.");
-        }
-      } else {
-        // Close Microphone
-        if (micStream) {
-          micStream.getTracks().forEach(track => track.stop());
-        }
-        if (micAnimationId) {
-          cancelAnimationFrame(micAnimationId);
-        }
-
-        isMicOpen = false;
-        btnMic.className = "w-full py-4 rounded-xl font-bold text-sm bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 transition flex items-center justify-center space-x-2";
-        micIcon.className = "fa-solid fa-microphone-slash text-lg";
-        micText.textContent = "Abrir Microfone";
-
-        resetVUMeter();
-        restoreMusicVolumeFromDucking();
-        showToast("Microfone FECHADO.");
-      }
-    }
-
-    function startVUMeter() {
-      const dataArray = new Uint8Array(micAnalyser.frequencyBinCount);
-
-      function renderFrame() {
-        micAnalyser.getByteFrequencyData(dataArray);
-        
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-          sum += dataArray[i];
-        }
-        const average = sum / dataArray.length;
-        const volumePercent = Math.min(100, Math.round((average / 128) * 100));
-
-        // Update percentage label
-        document.getElementById('vu-level-percent').textContent = `${volumePercent}%`;
-
-        // Update 10 VU Bars
-        const barCount = 10;
-        const activeBars = Math.ceil((volumePercent / 100) * barCount);
-
-        for (let i = 1; i <= barCount; i++) {
-          const bar = document.getElementById(`vu-bar-${i}`);
-          if (i <= activeBars) {
-            if (i <= 6) bar.className = "h-full flex-1 rounded-sm bg-emerald-500 transition-all duration-75";
-            else if (i <= 8) bar.className = "h-full flex-1 rounded-sm bg-yellow-500 transition-all duration-75";
-            else bar.className = "h-full flex-1 rounded-sm bg-red-500 transition-all duration-75";
-          } else {
-            bar.className = "h-full flex-1 rounded-sm bg-gray-800 transition-all duration-75";
-          }
-        }
-
-        // AUTO-DUCKING TRIGGER
-        if (volumePercent > 15) {
-          applyAutoDucking();
-        } else {
-          restoreMusicVolumeFromDucking();
-        }
-
-        micAnimationId = requestAnimationFrame(renderFrame);
-      }
-
-      renderFrame();
-    }
-
-    function resetVUMeter() {
-      document.getElementById('vu-level-percent').textContent = "0%";
-      for (let i = 1; i <= 10; i++) {
-        const bar = document.getElementById(`vu-bar-${i}`);
-        if (bar) bar.className = "h-full flex-1 rounded-sm bg-gray-800 transition-all duration-75";
-      }
-    }
-
-    // Auto-Ducking Logic
-    function applyAutoDucking() {
-      if (isDeckPlaying && deckSongsList[currentDeckIndex] && deckSongsList[currentDeckIndex].audioObj) {
-        deckSongsList[currentDeckIndex].audioObj.volume = 0.2; // Dim background music
-      }
-      if (isListenerPlaying) {
-        listenerAudioObj.volume = 0.2;
-      }
-    }
-
-    function restoreMusicVolumeFromDucking() {
-      if (isDeckPlaying && deckSongsList[currentDeckIndex] && deckSongsList[currentDeckIndex].audioObj) {
-        deckSongsList[currentDeckIndex].audioObj.volume = 1.0;
-      }
-      if (isListenerPlaying) {
-        const slider = document.getElementById('volume-listener');
-        listenerAudioObj.volume = slider ? parseFloat(slider.value) : 0.8;
-      }
-    }
-
-    /* ==========================================================================
-       SOUNDBOARD & VINHETAS / EFEITOS
-       ========================================================================== */
-    function handleAddJingleFile(event) {
-      const file = event.target.files[0];
-      const nameInput = document.getElementById('jingle-name-input');
-      const name = nameInput.value.trim() || (file ? file.name.replace(/\.[^/.]+$/, "") : "Vinheta Sem Nome");
-
-      if (file) {
-        const fileUrl = URL.createObjectURL(file);
-        const audioObj = new Audio(fileUrl);
-
-        const newJingle = {
-          id: 'jingle_' + Date.now(),
-          name: name,
-          fileUrl: fileUrl,
-          audioObj: audioObj
+    </footer>
+
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        // --- State Management ---
+        let appState = {
+            isLive: false,
+            locutorName: "Automático / Offline",
+            showTitle: "Gazeta FM Nacional Player",
+            discordUrl: "https://discord.gg/gazetafm",
+            team: [
+                { name: "DJ Carlos", show: "Manhã Total Gazeta" },
+                { name: "Ana Paula", show: "Tarde Hits" },
+                { name: "Marcos Vinicius", show: "Noite Sertaneja" }
+            ],
+            schedule: [
+                { time: "06:00 - 10:00", title: "Manhã Total Gazeta" },
+                { time: "10:00 - 14:00", title: "Tarde Hits" },
+                { time: "14:00 - 18:00", title: "Conexão Gazeta FM" },
+                { time: "18:00 - 22:00", title: "Noite Sertaneja" },
+                { time: "22:00 - 06:00", title: "Madrugada Gazeta" }
+            ],
+            jingles: [],
+            playlist: [],
+            publicChat: [
+                { name: "Mariana Souza", msg: "Adorando a programação da rádio! Toca Gusttavo Lima!" },
+                { name: "João Pedro", msg: "Salve pra galera de São Paulo!" }
+            ],
+            studioChat: [
+                { name: "Mariana Souza", msg: "Adorando a programação da rádio! Toca Gusttavo Lima!" }
+            ]
         };
 
-        jinglesList.push(newJingle);
-        nameInput.value = '';
-        renderJinglesGrid();
-        showToast("Vinheta adicionada!");
-      }
-    }
+        // Load LocalStorage if exists
+        try {
+            const saved = localStorage.getItem('gazeta_radio_state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                appState = { ...appState, ...parsed };
+            }
+        } catch(e) { console.error(e); }
 
-    function renderJinglesGrid() {
-      const grid = document.getElementById('jingles-grid');
-      if (!grid) return;
-
-      if (jinglesList.length === 0) {
-        grid.innerHTML = `
-          <div class="col-span-full py-6 text-center text-xs text-gray-500 border border-dashed border-gray-800 rounded-xl">
-            Nenhuma vinheta carregada. Adicione seus arquivos MP3 acima!
-          </div>
-        `;
-        return;
-      }
-
-      grid.innerHTML = jinglesList.map(j => `
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-3 flex items-center justify-between gap-2 shadow-md">
-          <div class="truncate">
-            <span class="block text-xs font-bold text-white truncate">${j.name}</span>
-            <span class="text-[10px] text-brand-gold uppercase">Efeito Sonoro</span>
-          </div>
-          <div class="flex items-center space-x-1 flex-shrink-0">
-            <button onclick="triggerJingle('${j.id}')" class="px-2.5 py-1.5 bg-brand-gold hover:brightness-110 text-black font-bold text-xs rounded-lg transition">
-              <i class="fa-solid fa-bolt mr-1"></i> Disparar
-            </button>
-            <button onclick="removeJingle('${j.id}')" class="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition" title="Remover e Parar imediatamente">
-              <i class="fa-solid fa-trash-can text-xs"></i>
-            </button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function triggerJingle(id) {
-      const j = jinglesList.find(item => item.id === id);
-      if (j && j.audioObj) {
-        j.audioObj.currentTime = 0;
-        j.audioObj.play();
-        showToast(`Disparado: ${j.name}`);
-      }
-    }
-
-    // FIX: Instant Audio Stop on Remove
-    function removeJingle(id) {
-      const index = jinglesList.findIndex(item => item.id === id);
-      if (index !== -1) {
-        const j = jinglesList[index];
-        if (j.audioObj) {
-          j.audioObj.pause();
-          j.audioObj.currentTime = 0;
+        function persistState() {
+            try {
+                localStorage.setItem('gazeta_radio_state', JSON.stringify(appState));
+            } catch(e) { console.error(e); }
         }
-        jinglesList.splice(index, 1);
-        renderJinglesGrid();
-        showToast("Vinheta removida e interrompida!");
-      }
-    }
 
-    function triggerSaveJinglesToast() {
-      showToast("Salvo com sucesso!");
-    }
-
-    /* ==========================================================================
-       MUSIC DECK & PLAYLIST MANAGEMENT
-       ========================================================================== */
-    function handleAddDeckSongs(event) {
-      const files = Array.from(event.target.files);
-      files.forEach(file => {
-        const fileUrl = URL.createObjectURL(file);
-        const audioObj = new Audio(fileUrl);
-
-        deckSongsList.push({
-          id: 'song_' + Date.now() + Math.random().toString(36).substr(2, 4),
-          title: file.name.replace(/\.[^/.]+$/, ""),
-          fileUrl: fileUrl,
-          audioObj: audioObj
-        });
-      });
-
-      renderDeckMusicList();
-      showToast(`${files.length} música(s) importada(s)!`);
-    }
-
-    function renderDeckMusicList() {
-      const list = document.getElementById('deck-music-list');
-      if (!list) return;
-
-      if (deckSongsList.length === 0) {
-        list.innerHTML = `
-          <div class="py-6 text-center text-xs text-gray-500 border border-dashed border-gray-800 rounded-xl">
-            Sua fila do deck está vazia. Importe arquivos .mp3 para começar.
-          </div>
-        `;
-        return;
-      }
-
-      list.innerHTML = deckSongsList.map((s, idx) => `
-        <div class="p-2.5 rounded-xl border transition flex items-center justify-between ${idx === currentDeckIndex ? 'bg-brand-cyan/10 border-brand-cyan/40 text-white' : 'bg-gray-900 border-gray-800 text-gray-300'}">
-          <div class="flex items-center space-x-2 truncate">
-            <span class="text-xs font-mono text-gray-500 w-4">${idx + 1}.</span>
-            <span class="text-xs font-medium truncate">${s.title}</span>
-          </div>
-          <div class="flex items-center space-x-1 flex-shrink-0">
-            <button onclick="playDeckSongAtIndex(${idx})" class="p-1.5 text-brand-cyan hover:bg-gray-800 rounded-lg">
-              <i class="fa-solid fa-play text-xs"></i>
-            </button>
-            <button onclick="removeDeckSongAtIndex(${idx})" class="p-1.5 text-red-400 hover:bg-gray-800 rounded-lg" title="Remover e Parar imediatamente">
-              <i class="fa-solid fa-trash-can text-xs"></i>
-            </button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function toggleDeckPlayPause() {
-      if (deckSongsList.length === 0) {
-        showToast("Adicione músicas ao deck primeiro!");
-        return;
-      }
-
-      if (!isDeckPlaying) {
-        if (currentDeckIndex === -1) currentDeckIndex = 0;
-        playDeckSongAtIndex(currentDeckIndex);
-      } else {
-        pauseDeckSong();
-      }
-    }
-
-    function playDeckSongAtIndex(index) {
-      // Pause active song if exists
-      if (currentDeckIndex !== -1 && deckSongsList[currentDeckIndex] && deckSongsList[currentDeckIndex].audioObj) {
-        deckSongsList[currentDeckIndex].audioObj.pause();
-      }
-
-      currentDeckIndex = index;
-      const song = deckSongsList[currentDeckIndex];
-
-      if (song && song.audioObj) {
-        song.audioObj.currentTime = 0;
-        song.audioObj.play().then(() => {
-          isDeckPlaying = true;
-          updateDeckControlsUI();
-
-          // Auto-play next song when current finishes
-          song.audioObj.onended = () => {
-            playDeckNext();
-          };
-
-          // Update current song status across radio
-          appData.currentSong = song.title;
-          saveStateToStorage();
-          renderAll();
-
-        }).catch(err => {
-          showToast("Erro ao reproduzir faixa.");
-        });
-      }
-    }
-
-    function pauseDeckSong() {
-      if (currentDeckIndex !== -1 && deckSongsList[currentDeckIndex] && deckSongsList[currentDeckIndex].audioObj) {
-        deckSongsList[currentDeckIndex].audioObj.pause();
-      }
-      isDeckPlaying = false;
-      updateDeckControlsUI();
-    }
-
-    function playDeckNext() {
-      if (deckSongsList.length === 0) return;
-      let nextIndex = currentDeckIndex + 1;
-      if (nextIndex >= deckSongsList.length) nextIndex = 0;
-      playDeckSongAtIndex(nextIndex);
-    }
-
-    // FIX: Instant Audio Stop on Deck Song Removal
-    function removeDeckSongAtIndex(idx) {
-      const songToRemove = deckSongsList[idx];
-      if (songToRemove && songToRemove.audioObj) {
-        songToRemove.audioObj.pause();
-        songToRemove.audioObj.currentTime = 0;
-      }
-
-      deckSongsList.splice(idx, 1);
-
-      if (idx === currentDeckIndex) {
-        isDeckPlaying = false;
-        currentDeckIndex = -1;
-        updateDeckControlsUI();
-      } else if (idx < currentDeckIndex) {
-        currentDeckIndex--;
-      }
-
-      renderDeckMusicList();
-      showToast("Música removida e áudio encerrado!");
-    }
-
-    function updateDeckControlsUI() {
-      const btnIcon = document.getElementById('deck-play-icon');
-      const btnText = document.getElementById('deck-play-text');
-      const statusInd = document.getElementById('deck-status-indicator');
-
-      if (isDeckPlaying) {
-        if (btnIcon) btnIcon.className = "fa-solid fa-pause mr-1.5";
-        if (btnText) btnText.textContent = "Pausar";
-        if (statusInd) {
-          statusInd.textContent = "Reproduzindo Ao Vivo";
-          statusInd.className = "text-xs text-brand-cyan font-bold animate-pulse";
+        // --- Toast Notification System ---
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-emerald-600 text-white px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-2 transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-base"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 10);
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => { toast.remove(); }, 300);
+            }, 3000);
         }
-      } else {
-        if (btnIcon) btnIcon.className = "fa-solid fa-play mr-1.5";
-        if (btnText) btnText.textContent = "Tocar Fila";
-        if (statusInd) {
-          statusInd.textContent = "Parado";
-          statusInd.className = "text-xs text-gray-400 font-mono";
+
+        // --- Active Listener Counter (Cross-Tab via BroadcastChannel) ---
+        const listenerChannel = new BroadcastChannel('gazeta_listeners_channel');
+        let activeListeners = 1;
+
+        function updateListenerCountUI() {
+            document.getElementById('listener-counter-badge').innerText = `${activeListeners} ${activeListeners === 1 ? 'ouvinte conectado' : 'ouvintes conectados'}`;
+            document.getElementById('studio-listener-count').innerText = activeListeners;
         }
-      }
-    }
 
-    /* ==========================================================================
-       SONG REQUESTS SYSTEM
-       ========================================================================== */
-    function submitSongRequest(event) {
-      event.preventDefault();
-      const name = document.getElementById('req-name').value.trim();
-      const song = document.getElementById('req-song').value.trim();
-      const msg = document.getElementById('req-msg').value.trim();
-
-      if (name && song) {
-        const newReq = {
-          id: 'req_' + Date.now(),
-          name,
-          song,
-          msg,
-          status: 'pending',
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        listenerChannel.onmessage = (event) => {
+            if (event.data && event.data.type === 'COUNT_UPDATE') {
+                activeListeners = event.data.count;
+                updateListenerCountUI();
+            }
         };
 
-        appData.requests.unshift(newReq);
-        saveStateToStorage();
-        renderAll();
+        // Register tab session
+        window.addEventListener('load', () => {
+            let currentCount = parseInt(localStorage.getItem('gazeta_active_count') || '0') + 1;
+            localStorage.setItem('gazeta_active_count', currentCount);
+            activeListeners = currentCount;
+            updateListenerCountUI();
+            listenerChannel.postMessage({ type: 'COUNT_UPDATE', count: activeListeners });
 
-        document.getElementById('form-pedi-musica').reset();
-        showToast("Pedido enviado com sucesso para o locutor!");
-      }
-    }
-
-    function renderRequests() {
-      const container = document.getElementById('studio-requests-list');
-      const badge = document.getElementById('request-count-badge');
-      if (!container) return;
-
-      const pendingCount = appData.requests.filter(r => r.status === 'pending').length;
-      if (badge) badge.textContent = `${pendingCount} novos`;
-
-      if (appData.requests.length === 0) {
-        container.innerHTML = `
-          <div class="py-6 text-center text-xs text-gray-500 border border-dashed border-gray-800 rounded-xl">
-            Nenhum pedido de música pendente.
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = appData.requests.map(r => `
-        <div class="p-3 bg-gray-900 border rounded-xl space-y-2 ${r.status === 'pending' ? 'border-brand-gold/40' : 'border-gray-800 opacity-60'}">
-          <div class="flex justify-between items-start">
-            <div>
-              <span class="text-xs font-bold text-white">${r.name}</span>
-              <span class="text-[10px] text-gray-400 block">${r.time}</span>
-            </div>
-            <span class="text-xs px-2 py-0.5 rounded font-bold uppercase ${r.status === 'pending' ? 'bg-brand-gold/20 text-brand-gold' : 'bg-emerald-500/20 text-emerald-400'}">
-              ${r.status === 'pending' ? 'Pendente' : 'Atendido'}
-            </span>
-          </div>
-          <p class="text-xs text-brand-cyan font-semibold">🎵 ${r.song}</p>
-          ${r.msg ? `<p class="text-xs text-gray-300 italic">"${r.msg}"</p>` : ''}
-          
-          ${r.status === 'pending' ? `
-            <div class="pt-1 flex gap-2">
-              <button onclick="markRequestDone('${r.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] rounded-lg transition">
-                Marcar Atendido
-              </button>
-            </div>
-          ` : ''}
-        </div>
-      `).join('');
-    }
-
-    function markRequestDone(id) {
-      const req = appData.requests.find(r => r.id === id);
-      if (req) {
-        req.status = 'done';
-        saveStateToStorage();
-        renderAll();
-        showToast("Pedido marcado como atendido!");
-      }
-    }
-
-    /* ==========================================================================
-       CHAT IN REAL-TIME (LISTENER & STUDIO)
-       ========================================================================== */
-    function sendChatMessage(event) {
-      event.preventDefault();
-      const user = document.getElementById('chat-username').value.trim();
-      const text = document.getElementById('chat-text').value.trim();
-
-      if (user && text) {
-        appData.chatMessages.push({
-          user,
-          text,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            renderPublicTeam();
+            renderPublicSchedule();
+            renderPublicChat();
+            renderStudioChat();
+            renderJingles();
+            renderPlaylist();
+            updateGlobalUI();
         });
 
-        saveStateToStorage();
-        renderAll();
-
-        document.getElementById('chat-text').value = '';
-      }
-    }
-
-    function sendStudioChatMessage(event) {
-      event.preventDefault();
-      const input = document.getElementById('studio-chat-input');
-      const text = input.value.trim();
-
-      if (text) {
-        appData.chatMessages.push({
-          user: `🎙️ Locutor (${appData.locutorName})`,
-          text,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          isOfficial: true
+        window.addEventListener('beforeunload', () => {
+            let currentCount = Math.max(1, parseInt(localStorage.getItem('gazeta_active_count') || '1') - 1);
+            localStorage.setItem('gazeta_active_count', currentCount);
+            listenerChannel.postMessage({ type: 'COUNT_UPDATE', count: currentCount });
         });
 
-        saveStateToStorage();
-        renderAll();
-        input.value = '';
-      }
-    }
+        // --- Navigation & View Switcher ---
+        function switchView(view) {
+            if (view === 'listener') {
+                document.getElementById('view-listener').classList.remove('hidden');
+                document.getElementById('view-studio').classList.add('hidden');
+            } else if (view === 'studio') {
+                document.getElementById('view-listener').classList.add('hidden');
+                document.getElementById('view-studio').classList.remove('hidden');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
-    function renderChat() {
-      const listenerBox = document.getElementById('chat-messages-container');
-      const studioBox = document.getElementById('studio-chat-feed');
+        function scrollToSection(id) {
+            switchView('listener');
+            setTimeout(() => {
+                const el = document.getElementById(id);
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        }
 
-      const htmlContent = appData.chatMessages.map(m => `
-        <div class="p-3 rounded-xl border ${m.isOfficial ? 'bg-brand-gold/10 border-brand-gold/30' : 'bg-gray-900 border-gray-800'}">
-          <div class="flex justify-between items-center mb-1">
-            <span class="text-xs font-bold ${m.isOfficial ? 'text-brand-gold' : 'text-brand-cyan'}">${m.user}</span>
-            <span class="text-[10px] text-gray-500">${m.time}</span>
-          </div>
-          <p class="text-xs text-gray-200">${m.text}</p>
-        </div>
-      `).join('');
+        // --- Auth & Login ---
+        function openLoginModal() {
+            document.getElementById('login-modal').classList.remove('hidden');
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+        }
 
-      if (listenerBox) {
-        listenerBox.innerHTML = htmlContent;
-        listenerBox.scrollTop = listenerBox.scrollHeight;
-      }
-      if (studioBox) {
-        studioBox.innerHTML = htmlContent;
-        studioBox.scrollTop = studioBox.scrollHeight;
-      }
-    }
+        function closeLoginModal() {
+            document.getElementById('login-modal').classList.add('hidden');
+        }
 
-    /* ==========================================================================
-       SCHEDULE & TEAM MANAGEMENT (WITH TOAST MESSAGES)
-       ========================================================================== */
-    function renderSchedule() {
-      const grid = document.getElementById('schedule-grid');
-      const editList = document.getElementById('edit-schedule-list');
+        function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('login-user').value.trim();
+            const p = document.getElementById('login-pass').value.trim();
 
-      if (grid) {
-        grid.innerHTML = appData.schedule.map(s => `
-          <div class="bg-brand-cardBg border border-brand-border rounded-xl p-4 flex items-center space-x-4 shadow-lg">
-            <div class="w-12 h-12 bg-brand-gold/10 text-brand-gold rounded-xl flex items-center justify-center font-bold text-sm border border-brand-gold/20 flex-shrink-0">
-              <i class="fa-solid fa-clock"></i>
-            </div>
-            <div>
-              <span class="text-xs font-bold text-brand-gold uppercase">${s.time}</span>
-              <h4 class="font-bold text-white text-base">${s.title}</h4>
-              <p class="text-xs text-gray-400">Com: ${s.host}</p>
-            </div>
-          </div>
-        `).join('');
-      }
+            if (u === 'admin' && p === '123456') {
+                closeLoginModal();
+                switchView('studio');
+                showToast('Login efetuado com sucesso!');
+            } else {
+                alert('Usuário ou senha incorretos! Use admin / 123456');
+            }
+        }
 
-      if (editList) {
-        editList.innerHTML = appData.schedule.map((s, idx) => `
-          <div class="p-2.5 bg-gray-900 border border-gray-800 rounded-xl flex items-center justify-between text-xs">
-            <div>
-              <strong class="text-white">${s.time}</strong> - ${s.title} (${s.host})
-            </div>
-            <button onclick="removeScheduleSlot(${idx})" class="text-red-400 hover:text-red-300">
-              <i class="fa-solid fa-trash-can"></i>
-            </button>
-          </div>
-        `).join('');
-      }
-    }
+        function handleLogout() {
+            switchView('listener');
+            showToast('Você saiu do painel com sucesso.');
+        }
 
-    function addScheduleSlot() {
-      const time = document.getElementById('add-prog-time').value.trim();
-      const title = document.getElementById('add-prog-title').value.trim();
-      const host = document.getElementById('add-prog-host').value.trim();
+        // --- Transmission Status Toggle ---
+        function toggleTransmission() {
+            appState.isLive = !appState.isLive;
+            persistState();
+            updateGlobalUI();
+            showToast(appState.isLive ? 'Transmissão Iniciada!' : 'Transmissão Encerrada.');
+        }
 
-      if (time && title && host) {
-        appData.schedule.push({ time, title, host });
-        renderSchedule();
-        document.getElementById('add-prog-time').value = '';
-        document.getElementById('add-prog-title').value = '';
-        document.getElementById('add-prog-host').value = '';
-      }
-    }
+        function updateGlobalUI() {
+            const dot = document.getElementById('status-dot');
+            const txt = document.getElementById('status-text');
+            const heroStatus = document.getElementById('hero-status-label');
+            const heroLoc = document.getElementById('hero-locutor-name');
+            const heroShow = document.getElementById('hero-show-title');
+            const studioInd = document.getElementById('studio-live-indicator');
+            const studioBtn = document.getElementById('studio-trans-btn');
+            const studioBtnTxt = document.getElementById('studio-trans-btn-text');
 
-    function removeScheduleSlot(idx) {
-      appData.schedule.splice(idx, 1);
-      renderSchedule();
-    }
+            if (appState.isLive) {
+                dot.className = "w-2.5 h-2.5 rounded-full bg-red-600 animate-ping";
+                txt.innerText = "TRANSMISSÃO AO VIVO";
+                heroStatus.innerText = "TRANSMISSÃO AO VIVO";
+                heroLoc.innerText = appState.locutorName;
+                heroShow.innerText = appState.showTitle;
+                studioInd.className = "bg-red-600/20 text-red-500 border border-red-600/30 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase animate-pulse";
+                studioInd.innerText = "AO VIVO";
+                studioBtn.className = "bg-slate-800 hover:bg-slate-700 text-red-400 border border-slate-700 px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition shadow-lg";
+                studioBtnTxt.innerText = "Encerrar Transmissão";
+            } else {
+                dot.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse";
+                txt.innerText = "Aguardando TRANSMISSÃO";
+                heroStatus.innerText = "Aguardando TRANSMISSÃO";
+                heroLoc.innerText = "Automático / Offline";
+                heroShow.innerText = "Gazeta FM Nacional Player";
+                studioInd.className = "bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase";
+                studioInd.innerText = "Fora do Ar";
+                studioBtn.className = "bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition shadow-lg";
+                studioBtnTxt.innerText = "Iniciar Transmissão";
+            }
 
-    function saveScheduleChanges() {
-      saveStateToStorage();
-      renderAll();
-      closeModal('modal-programacao');
-      showToast("Salvo com sucesso!");
-    }
+            document.getElementById('config-locutor').value = appState.locutorName;
+            document.getElementById('config-show').value = appState.showTitle;
+            document.getElementById('config-discord-url').value = appState.discordUrl;
+            document.getElementById('discord-link-btn').href = appState.discordUrl;
+        }
 
-    function renderTeam() {
-      const grid = document.getElementById('team-grid');
-      const editList = document.getElementById('edit-team-list');
+        function saveProgramConfig() {
+            appState.locutorName = document.getElementById('config-locutor').value || 'DJ Locutor';
+            appState.showTitle = document.getElementById('config-show').value || 'Gazeta FM Show';
+            persistState();
+            updateGlobalUI();
+            showToast('Salvo com sucesso!');
+        }
 
-      if (grid) {
-        grid.innerHTML = appData.team.map(t => `
-          <div class="bg-brand-cardBg border border-brand-border rounded-2xl overflow-hidden shadow-xl text-center p-6 space-y-3">
-            <img src="${t.photo}" alt="${t.name}" class="w-24 h-24 rounded-full mx-auto object-cover border-2 border-brand-gold shadow-lg">
-            <div>
-              <h4 class="font-bold text-white text-lg">${t.name}</h4>
-              <p class="text-xs text-brand-gold font-medium uppercase tracking-wider">${t.role}</p>
-            </div>
-          </div>
-        `).join('');
-      }
+        // --- Studio 3-Dots Menu Dropdown ---
+        function toggleStudioMenu() {
+            const menu = document.getElementById('studio-dropdown-menu');
+            menu.classList.toggle('hidden');
+        }
 
-      if (editList) {
-        editList.innerHTML = appData.team.map((t, idx) => `
-          <div class="p-2.5 bg-gray-900 border border-gray-800 rounded-xl flex items-center justify-between text-xs">
-            <div class="flex items-center space-x-2">
-              <img src="${t.photo}" class="w-6 h-6 rounded-full object-cover">
-              <strong class="text-white">${t.name}</strong> (${t.role})
-            </div>
-            <button onclick="removeTeamMember(${idx})" class="text-red-400 hover:text-red-300">
-              <i class="fa-solid fa-trash-can"></i>
-            </button>
-          </div>
-        `).join('');
-      }
-    }
+        // --- Web Audio & Microphone / Auto-Ducking ---
+        let audioContext = null;
+        let micStream = null;
+        let micNode = null;
+        let analyserNode = null;
+        let isMicOpen = false;
+        let masterGainNode = null;
+        let activeAudioElement = null;
 
-    function addTeamMember() {
-      const name = document.getElementById('add-team-name').value.trim();
-      const role = document.getElementById('add-team-role').value.trim();
-      const photo = document.getElementById('add-team-photo').value.trim() || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80';
+        async function toggleMicrophone() {
+            const btn = document.getElementById('mic-toggle-btn');
+            const btnText = document.getElementById('mic-btn-text');
+            const badge = document.getElementById('mic-status-badge');
 
-      if (name && role) {
-        appData.team.push({ name, role, photo });
-        renderTeam();
-        document.getElementById('add-team-name').value = '';
-        document.getElementById('add-team-role').value = '';
-        document.getElementById('add-team-photo').value = '';
-      }
-    }
+            if (!isMicOpen) {
+                try {
+                    micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    micNode = audioContext.createMediaStreamSource(micStream);
+                    analyserNode = audioContext.createAnalyser();
+                    micNode.connect(analyserNode);
 
-    function removeTeamMember(idx) {
-      appData.team.splice(idx, 1);
-      renderTeam();
-    }
+                    isMicOpen = true;
+                    btn.className = "flex-grow bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-2xl transition flex items-center justify-center gap-2 text-sm shadow-lg shadow-emerald-600/30";
+                    btnText.innerText = "Fechar Microfone";
+                    badge.className = "px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px] uppercase animate-pulse";
+                    badge.innerText = "Aberto (Ao Vivo)";
+                    showToast('Microfone aberto com sucesso!');
 
-    function saveTeamChanges() {
-      saveStateToStorage();
-      renderAll();
-      closeModal('modal-equipe');
-      showToast("Salvo com sucesso!");
-    }
+                    startVUMeter();
+                } catch(e) {
+                    alert('Erro ao acessar microfone. Verifique as permissões do navegador.');
+                }
+            } else {
+                if (micStream) micStream.getTracks().forEach(t => t.stop());
+                isMicOpen = false;
+                btn.className = "flex-grow bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-2xl transition flex items-center justify-center gap-2 text-sm shadow-lg shadow-red-600/30";
+                btnText.innerText = "Abrir Microfone";
+                badge.className = "px-3 py-1 rounded-full bg-slate-800 text-slate-400 font-bold text-[10px] uppercase";
+                badge.innerText = "Fechado";
+                showToast('Microfone fechado.');
+            }
+        }
 
-    function saveDiscordLink() {
-      const url = document.getElementById('discord-url-input').value.trim();
-      if (url) {
-        appData.discordUrl = url;
-        saveStateToStorage();
-        renderAll();
-        closeModal('modal-discord');
-        showToast("Salvo com sucesso!");
-      }
-    }
+        function startVUMeter() {
+            const micBar = document.getElementById('mic-vu-bar');
+            const micDb = document.getElementById('mic-db-text');
+            const dataArray = new Uint8Array(128);
 
-    /* ==========================================================================
-       UTILITIES & TOAST NOTIFICATIONS (ZERO BEEP NOISE)
-       ========================================================================== */
-    function openModal(id) {
-      const el = document.getElementById(id);
-      if (el) el.classList.remove('hidden');
-    }
+            function updateMeter() {
+                if (!isMicOpen || !analyserNode) {
+                    micBar.style.width = '0%';
+                    micDb.innerText = '-inf dB';
+                    return;
+                }
+                analyserNode.getByteFrequencyData(dataArray);
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+                let avg = sum / dataArray.length;
+                let pct = Math.min(100, (avg / 128) * 100);
+                micBar.style.width = pct + '%';
+                micDb.innerText = Math.round((pct - 100)) + ' dB';
+                requestAnimationFrame(updateMeter);
+            }
+            updateMeter();
+        }
 
-    function closeModal(id) {
-      const el = document.getElementById(id);
-      if (el) el.classList.add('hidden');
-    }
+        // --- Soundboard / Jingles Manager ---
+        function handleJingleUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                appState.jingles.push({ name: file.name, data: evt.target.result });
+                persistState();
+                renderJingles();
+                showToast('Vinheta adicionada com sucesso!');
+            };
+            reader.readAsDataURL(file);
+        }
 
-    function showToast(msg) {
-      const container = document.getElementById('toast-container');
-      if (!container) return;
+        function renderJingles() {
+            const container = document.getElementById('jingles-container');
+            if (appState.jingles.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 italic py-2">Nenhuma vinheta adicionada ainda.</p>`;
+                return;
+            }
+            container.innerHTML = appState.jingles.map((j, idx) => `
+                <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs">
+                    <span class="truncate max-w-[180px] text-slate-300 font-medium">${j.name}</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="playJingle('${j.data}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg font-bold transition">Disparar</button>
+                        <button onclick="removeJingle(${idx})" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1 rounded-lg font-bold transition">Remover</button>
+                    </div>
+                </div>
+            `).join('');
+        }
 
-      const toast = document.createElement('div');
-      toast.className = "px-4 py-3 bg-brand-cardBg border border-brand-gold text-white text-xs font-bold rounded-xl shadow-2xl flex items-center space-x-2 transition-all duration-300 transform toast-enter";
-      toast.innerHTML = `
-        <i class="fa-solid fa-circle-check text-brand-gold text-sm"></i>
-        <span>${msg}</span>
-      `;
+        let activeJingleAudio = null;
+        function playJingle(data) {
+            if (activeJingleAudio) activeJingleAudio.pause();
+            activeJingleAudio = new Audio(data);
+            activeJingleAudio.play();
+        }
 
-      container.appendChild(toast);
+        function removeJingle(idx) {
+            if (activeJingleAudio) {
+                activeJingleAudio.pause();
+                activeJingleAudio = null;
+            }
+            appState.jingles.splice(idx, 1);
+            persistState();
+            renderJingles();
+            showToast('Vinheta removida com sucesso!');
+        }
 
-      setTimeout(() => {
-        toast.classList.remove('toast-enter');
-        toast.classList.add('toast-show');
-      }, 10);
+        function saveJingles() {
+            persistState();
+            showToast('Salvo com sucesso!');
+        }
 
-      setTimeout(() => {
-        toast.classList.remove('toast-show');
-        toast.classList.add('toast-enter');
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
-    }
-  </script> 
+        // --- Audio Deck / Playlist ---
+        function handlePlaylistUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                appState.playlist.push({ name: file.name, data: evt.target.result });
+                persistState();
+                renderPlaylist();
+                showToast('Música adicionada ao deck!');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderPlaylist() {
+            const container = document.getElementById('playlist-container');
+            if (appState.playlist.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 italic py-2">Nenhuma música no deck.</p>`;
+                return;
+            }
+            container.innerHTML = appState.playlist.map((item, idx) => `
+                <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs">
+                    <span class="truncate max-w-[180px] text-slate-300 font-medium">${item.name}</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="playPlaylistTrack('${item.data}', '${item.name}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg font-bold transition">Tocar</button>
+                        <button onclick="removePlaylistTrack(${idx})" class="bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white px-3 py-1 rounded-lg font-bold transition">Remover</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function playPlaylistTrack(data, name) {
+            if (activeAudioElement) {
+                activeAudioElement.pause();
+                activeAudioElement = null;
+            }
+            activeAudioElement = new Audio(data);
+            activeAudioElement.volume = parseFloat(document.getElementById('volume-slider').value || 0.8);
+            activeAudioElement.play();
+
+            document.getElementById('sticky-song-title').innerText = name;
+            document.getElementById('now-playing-marquee').innerText = `Tocando agora: ${name}`;
+            showToast(`Tocando: ${name}`);
+        }
+
+        function removePlaylistTrack(idx) {
+            if (activeAudioElement) {
+                activeAudioElement.pause();
+                activeAudioElement = null;
+            }
+            appState.playlist.splice(idx, 1);
+            persistState();
+            renderPlaylist();
+            document.getElementById('sticky-song-title').innerText = "Gazeta FM Nacional Player";
+            showToast('Música removida e parada com sucesso!');
+        }
+
+        let isPlaying = false;
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const icon1 = document.getElementById('hero-play-icon');
+            const icon2 = document.getElementById('sticky-play-icon');
+            const icon3 = document.getElementById('sticky-play-icon-mobile');
+            const text = document.getElementById('hero-play-text');
+            const vinyl = document.getElementById('vinyl-disc');
+
+            if (isPlaying) {
+                if (icon1) icon1.className = "fa-solid fa-pause text-lg";
+                if (icon2) icon2.className = "fa-solid fa-pause text-lg";
+                if (icon3) icon3.className = "fa-solid fa-pause";
+                if (text) text.innerText = "Pausar Rádio";
+                if (vinyl) vinyl.classList.add('vinyl-spin');
+                showToast('Reproduzindo rádio ao vivo...');
+            } else {
+                if (icon1) icon1.className = "fa-solid fa-play text-lg";
+                if (icon2) icon2.className = "fa-solid fa-play text-lg";
+                if (icon3) icon3.className = "fa-solid fa-play";
+                if (text) text.innerText = "Ouvir Rádio Ao Vivo";
+                if (vinyl) vinyl.classList.remove('vinyl-spin');
+                if (activeAudioElement) activeAudioElement.pause();
+                showToast('Player pausado.');
+            }
+        }
+
+        function changeVolume(val) {
+            if (activeAudioElement) activeAudioElement.volume = parseFloat(val);
+        }
+
+        // --- Chat & Song Requests ---
+        function handleSendRequest(e) {
+            e.preventDefault();
+            const name = document.getElementById('req-name').value;
+            const city = document.getElementById('req-city').value;
+            const song = document.getElementById('req-song').value;
+            const msg = document.getElementById('req-msg').value;
+
+            const formatted = `Pedido de ${name} (${city}): ${song} - "${msg}"`;
+            appState.studioChat.push({ name: `🎵 Pedido Musical (${name})`, msg: `${song} (${city})` });
+            persistState();
+            renderStudioChat();
+
+            document.getElementById('req-name').value = '';
+            document.getElementById('req-city').value = '';
+            document.getElementById('req-song').value = '';
+            document.getElementById('req-msg').value = '';
+            showToast('Pedido de música enviado com sucesso!');
+        }
+
+        function handleSendPublicChat(e) {
+            e.preventDefault();
+            const name = document.getElementById('public-chat-name').value;
+            const msg = document.getElementById('public-chat-msg').value;
+
+            appState.publicChat.push({ name, msg });
+            appState.studioChat.push({ name, msg });
+            persistState();
+            renderPublicChat();
+            renderStudioChat();
+
+            document.getElementById('public-chat-msg').value = '';
+        }
+
+        function renderPublicChat() {
+            const container = document.getElementById('listener-chat-messages');
+            container.innerHTML = appState.publicChat.map(c => `
+                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                    <span class="font-bold text-red-500">${c.name}:</span>
+                    <span class="text-slate-300 ml-1">${c.msg}</span>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function renderStudioChat() {
+            const container = document.getElementById('studio-chat-messages');
+            container.innerHTML = appState.studioChat.map(c => `
+                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                    <span class="font-bold text-red-500">${c.name}:</span>
+                    <span class="text-slate-300 ml-1">${c.msg}</span>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // --- 3-Dots Modals Management (Team, Schedule, Discord) ---
+        function openTeamModal() {
+            document.getElementById('modal-team').classList.remove('hidden');
+            renderModalTeam();
+        }
+        function closeTeamModal() { document.getElementById('modal-team').classList.add('hidden'); }
+
+        function renderModalTeam() {
+            const container = document.getElementById('modal-team-list');
+            container.innerHTML = appState.team.map((t, idx) => `
+                <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
+                    <div>
+                        <p class="font-bold text-white">${t.name}</p>
+                        <p class="text-slate-400 text-[10px]">${t.show}</p>
+                    </div>
+                    <button onclick="removeTeamMember(${idx})" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1 rounded-lg font-bold transition">Remover</button>
+                </div>
+            `).join('');
+        }
+
+        function addTeamMember() {
+            const name = document.getElementById('new-team-name').value;
+            const show = document.getElementById('new-team-show').value;
+            if (!name || !show) return;
+            appState.team.push({ name, show });
+            document.getElementById('new-team-name').value = '';
+            document.getElementById('new-team-show').value = '';
+            renderModalTeam();
+        }
+
+        function removeTeamMember(idx) {
+            appState.team.splice(idx, 1);
+            renderModalTeam();
+        }
+
+        function saveTeamData() {
+            persistState();
+            renderPublicTeam();
+            closeTeamModal();
+            showToast('Salvo com sucesso!');
+        }
+
+        function renderPublicTeam() {
+            const container = document.getElementById('public-team-list');
+            container.innerHTML = appState.team.map(t => `
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-red-600/20 text-red-500 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-white text-sm">${t.name}</h4>
+                        <p class="text-xs text-slate-400">${t.show}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- Schedule Modal ---
+        function openScheduleModal() {
+            document.getElementById('modal-schedule').classList.remove('hidden');
+            renderModalSchedule();
+        }
+        function closeScheduleModal() { document.getElementById('modal-schedule').classList.add('hidden'); }
+
+        function renderModalSchedule() {
+            const container = document.getElementById('modal-schedule-list');
+            container.innerHTML = appState.schedule.map((s, idx) => `
+                <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
+                    <div>
+                        <p class="font-bold text-red-500">${s.time}</p>
+                        <p class="text-white text-xs">${s.title}</p>
+                    </div>
+                    <button onclick="removeScheduleItem(${idx})" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1 rounded-lg font-bold transition">Remover</button>
+                </div>
+            `).join('');
+        }
+
+        function addScheduleItem() {
+            const time = document.getElementById('new-sch-time').value;
+            const title = document.getElementById('new-sch-title').value;
+            if (!time || !title) return;
+            appState.schedule.push({ time, title });
+            document.getElementById('new-sch-time').value = '';
+            document.getElementById('new-sch-title').value = '';
+            renderModalSchedule();
+        }
+
+        function removeScheduleItem(idx) {
+            appState.schedule.splice(idx, 1);
+            renderModalSchedule();
+        }
+
+        function saveScheduleData() {
+            persistState();
+            renderPublicSchedule();
+            closeScheduleModal();
+            showToast('Salvo com sucesso!');
+        }
+
+        function renderPublicSchedule() {
+            const container = document.getElementById('public-schedule-list');
+            container.innerHTML = appState.schedule.map(s => `
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex items-center justify-between text-xs">
+                    <span class="font-bold text-red-500 bg-red-600/10 px-3 py-1 rounded-lg border border-red-600/35">${s.time}</span>
+                    <span class="font-bold text-white text-sm">${s.title}</span>
+                </div>
+            `).join('');
+        }
+
+        // --- Discord Modal ---
+        function openDiscordModal() {
+            document.getElementById('modal-discord').classList.remove('hidden');
+            document.getElementById('config-discord-url').value = appState.discordUrl;
+        }
+        function closeDiscordModal() { document.getElementById('modal-discord').classList.add('hidden'); }
+
+        function saveDiscordData() {
+            const url = document.getElementById('config-discord-url').value;
+            if (url) {
+                appState.discordUrl = url;
+                persistState();
+                document.getElementById('discord-link-btn').href = url;
+                closeDiscordModal();
+                showToast('Salvo com sucesso!');
+            }
+        }
+    </script>
+</body>
+</html>
