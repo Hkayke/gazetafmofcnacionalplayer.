@@ -834,9 +834,14 @@
         // --- Transmission Status Toggle ---
         function toggleTransmission() {
             if (!isHostAuthenticated) { showToast('Entre no painel do locutor para controlar a transmissão.'); return; }
-            appState.isLive = !appState.isLive;
             ensureAudioGraph();
+            if (audioContext.state === 'suspended') audioContext.resume().catch(() => {});
+            appState.isLive = !appState.isLive;
             broadcastMasterGainNode.gain.setTargetAtTime(appState.isLive ? 1 : 0, audioContext.currentTime, 0.03);
+            if (appState.isLive && radioSocket) {
+                // Build peers for listeners already connected before going live.
+                radioSocket.emit('host:request-listeners');
+            }
             if (radioSocket) radioSocket.emit(appState.isLive ? 'host:go-live' : 'host:stop-live');
             persistState();
             updateGlobalUI();
@@ -916,9 +921,10 @@
 
         function connectRadioSocket() {
             if (radioSocket || typeof io !== 'function') return;
-            radioSocket = io();
+            radioSocket = io({ reconnection: true, reconnectionAttempts: Infinity, timeout: 20000 });
             liveStreamAudio = document.getElementById('live-stream-audio');
             radioSocket.on('connect', () => { radioSocket.emit('listener:ready'); updateConnectionStatus('Conectado ao servidor'); });
+            radioSocket.on('connect_error', err => { updateConnectionStatus('Erro de conexão: ' + (err?.message || 'servidor indisponível')); console.error('Socket.IO:', err); });
             radioSocket.on('disconnect', () => updateConnectionStatus('Reconectando ao servidor...'));
             radioSocket.on('radio:status', d => updateConnectionStatus(d?.hostOnline ? 'Locutor conectado' : 'Aguardando o locutor'));
             radioSocket.on('radio:host-online', d => { hostSocketId = d.hostId; updateConnectionStatus('Locutor conectado'); });
@@ -938,11 +944,23 @@
         }
         function updateConnectionStatus(message) { const el=document.getElementById('radio-connection-status'); if(el)el.textContent=message; }
         function ensureAudioGraph() {
-            if(!audioContext)audioContext=new(window.AudioContext||window.webkitAudioContext)();
-            if(!broadcastDestination)broadcastDestination=audioContext.createMediaStreamDestination();
-            if(!broadcastMasterGainNode){broadcastMasterGainNode=audioContext.createGain();broadcastMasterGainNode.gain.value=appState.isLive?1:0;broadcastMasterGainNode.connect(broadcastDestination);}
-            if(!micBroadcastGainNode){micBroadcastGainNode=audioContext.createGain();micBroadcastGainNode.gain.value=1;micBroadcastGainNode.connect(broadcastMasterGainNode);}
-            if(!musicBroadcastGainNode){musicBroadcastGainNode=audioContext.createGain();musicBroadcastGainNode.gain.value=1;musicBroadcastGainNode.connect(broadcastMasterGainNode);}
+            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (!broadcastDestination) broadcastDestination = audioContext.createMediaStreamDestination();
+            if (!broadcastMasterGainNode) {
+                broadcastMasterGainNode = audioContext.createGain();
+                broadcastMasterGainNode.gain.value = appState.isLive ? 1 : 0;
+                broadcastMasterGainNode.connect(broadcastDestination);
+            }
+            if (!micBroadcastGainNode) {
+                micBroadcastGainNode = audioContext.createGain();
+                micBroadcastGainNode.gain.value = 1;
+                micBroadcastGainNode.connect(broadcastMasterGainNode);
+            }
+            if (!musicBroadcastGainNode) {
+                musicBroadcastGainNode = audioContext.createGain();
+                musicBroadcastGainNode.gain.value = 1;
+                musicBroadcastGainNode.connect(broadcastMasterGainNode);
+            }
             return audioContext;
         }
         function makePeerConnection(remoteId) {
@@ -984,9 +1002,9 @@
 
             if (!isMicOpen) {
                 try {
-                    micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                    if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    
+                    ensureAudioGraph();
+                    if (audioContext.state === 'suspended') await audioContext.resume();
+                    micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
                     micNode = audioContext.createMediaStreamSource(micStream);
                     analyserNode = audioContext.createAnalyser();
                     micNode.connect(analyserNode);
@@ -1075,10 +1093,20 @@
         }
 
         let activeJingleAudio = null;
+        let activeJingleSourceNode = null;
         function playJingle(data) {
-            if (activeJingleAudio) activeJingleAudio.pause();
+            ensureAudioGraph();
+            if (audioContext.state === 'suspended') audioContext.resume().catch(() => {});
+            if (activeJingleAudio) {
+                activeJingleAudio.pause();
+                if (activeJingleSourceNode) { try { activeJingleSourceNode.disconnect(); } catch (_) {} }
+            }
             activeJingleAudio = new Audio(data);
-            activeJingleAudio.play();
+            activeJingleAudio.preload = 'auto';
+            activeJingleSourceNode = audioContext.createMediaElementSource(activeJingleAudio);
+            activeJingleSourceNode.connect(audioContext.destination);
+            activeJingleSourceNode.connect(musicBroadcastGainNode);
+            activeJingleAudio.play().catch(() => showToast('Não foi possível tocar a vinheta. Tente novamente.'));
         }
 
         function removeJingle(idx) {
@@ -1221,6 +1249,7 @@
             const volume = Math.max(0, Math.min(1, parseFloat(val)));
             if (musicGainNode) musicGainNode.gain.value = document.getElementById('music-return-toggle').checked ? volume : 0;
             else if (activeAudioElement) activeAudioElement.volume = volume;
+            if (musicBroadcastGainNode) musicBroadcastGainNode.gain.value = volume;
             if (!isHostAuthenticated && liveStreamAudio) liveStreamAudio.volume = volume;
         }
 
