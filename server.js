@@ -79,6 +79,12 @@ io.on('connection', socket => {
     for (const listenerId of listeners) socket.emit('listener:ready', { listenerId });
   });
 
+  socket.on('host:now-playing', data => {
+    if (!socket.data.isHost || hostSocketId !== socket.id) return;
+    const name = cleanText(data?.name, 160);
+    if (name) io.emit('radio:now-playing', { name });
+  });
+
   socket.on('host:go-live', () => {
     if (!socket.data.isHost || hostSocketId !== socket.id) return;
     isLive = true;
