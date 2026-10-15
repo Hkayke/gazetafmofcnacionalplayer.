@@ -12,6 +12,7 @@ const LOCUTOR_PASSWORD = process.env.LOCUTOR_PASSWORD;
 const MAX_TEXT = 240;
 const MAX_HISTORY = 150;
 let hostSocketId = null;
+let isLive = false;
 const listeners = new Set();
 const chatHistory = [];
 const requestHistory = [];
@@ -30,6 +31,7 @@ function hostOffline() {
   if (!hostSocketId) return;
   const previous = hostSocketId;
   hostSocketId = null;
+  isLive = false;
   io.emit('radio:host-offline', { hostId: previous });
 }
 
@@ -41,10 +43,11 @@ io.on('connection', socket => {
     if (socket.data.isHost) return;
     socket.data.isListener = true;
     listeners.add(socket.id);
-    socket.emit('radio:status', { hostOnline: Boolean(hostSocketId) });
+    socket.emit('radio:status', { hostOnline: Boolean(hostSocketId), isLive });
     socket.emit('chat:history', { chat: chatHistory, requests: requestHistory });
     if (hostSocketId) {
       socket.emit('radio:host-online', { hostId: hostSocketId });
+      if (isLive) socket.emit('radio:live');
       hostEmit('listener:ready', { listenerId: socket.id });
     }
   });
@@ -60,10 +63,22 @@ io.on('connection', socket => {
     socket.data.isListener = false;
     listeners.delete(socket.id);
     hostSocketId = socket.id;
+    isLive = false;
     reply({ ok: true });
     socket.emit('host:authenticated', { hostId: socket.id });
     io.emit('radio:host-online', { hostId: socket.id });
     for (const listenerId of listeners) socket.emit('listener:ready', { listenerId });
+  });
+
+  socket.on('host:go-live', () => {
+    if (!socket.data.isHost || hostSocketId !== socket.id) return;
+    isLive = true;
+    io.emit('radio:live');
+  });
+  socket.on('host:stop-live', () => {
+    if (!socket.data.isHost || hostSocketId !== socket.id) return;
+    isLive = false;
+    io.emit('radio:stopped');
   });
 
   socket.on('host:logout', () => {
@@ -72,7 +87,7 @@ io.on('connection', socket => {
     hostOffline();
     socket.data.isListener = true;
     listeners.add(socket.id);
-    socket.emit('radio:status', { hostOnline: false });
+    socket.emit('radio:status', { hostOnline: false, isLive: false });
   });
 
   socket.on('webrtc:offer', data => {
