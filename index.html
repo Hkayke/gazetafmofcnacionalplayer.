@@ -1196,11 +1196,10 @@
         }
 
         function changeVolume(val) {
-            if (musicGainNode) {
-                musicGainNode.gain.value = document.getElementById('music-return-toggle').checked ? parseFloat(val) : 0;
-            } else if (activeAudioElement) {
-                activeAudioElement.volume = Math.min(1, parseFloat(val));
-            }
+            const volume = Math.max(0, Math.min(1, parseFloat(val)));
+            if (musicGainNode) musicGainNode.gain.value = document.getElementById('music-return-toggle').checked ? volume : 0;
+            else if (activeAudioElement) activeAudioElement.volume = volume;
+            if (!isHostAuthenticated && liveStreamAudio) liveStreamAudio.volume = volume;
         }
 
         // --- Chat & Song Requests ---
@@ -1233,12 +1232,16 @@
             document.getElementById('public-chat-msg').value = '';
         }
 
+        function escapeChatText(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
         function renderPublicChat() {
             const container = document.getElementById('listener-chat-messages');
             container.innerHTML = appState.publicChat.map(c => `
                 <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                    <span class="font-bold text-red-500">${c.name}:</span>
-                    <span class="text-slate-300 ml-1">${c.msg}</span>
+                    <span class="font-bold text-red-500">${escapeChatText(c.name)}:</span>
+                    <span class="text-slate-300 ml-1">${escapeChatText(c.msg)}</span>
                 </div>
             `).join('');
             container.scrollTop = container.scrollHeight;
@@ -1265,8 +1268,8 @@
             });
             container.innerHTML = filteredMessages.map(c => `
                 <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                    <span class="font-bold text-red-500">${c.name}:</span>
-                    <span class="text-slate-300 ml-1">${c.msg}</span>
+                    <span class="font-bold text-red-500">${escapeChatText(c.name)}:</span>
+                    <span class="text-slate-300 ml-1">${escapeChatText(c.msg)}</span>
                 </div>
             `).join('') || `<p class="text-slate-500 italic py-4 text-center">${studioChatFilter === 'requests' ? 'Nenhum pedido de música recebido ainda.' : 'Nenhuma mensagem no chat ainda.'}</p>`;
             container.scrollTop = container.scrollHeight;
