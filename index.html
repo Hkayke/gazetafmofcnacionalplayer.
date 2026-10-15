@@ -1,14 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAZETA FM NACIONAL PLAYER - A sua rádio, em todo lugar!</title>
+    <title>GAZETA FM NACIONAL PLAYER</title>
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-dark: #0a0c10;
@@ -19,7 +18,7 @@
             --text-main: #ffffff;
             --text-muted: #9fa6b2;
             --border-color: #232936;
-            --accent-blue: #0088ff;
+            --btn-green: #00c853;
         }
 
         * {
@@ -38,79 +37,67 @@
             overflow-x: hidden;
         }
 
-        /* HEADER / NAVBAR */
-        header {
+        /* ------------------ SITE PÚBLICO (IMAGEM 1) ------------------ */
+        #public-site {
+            display: block;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        header.pub-header {
             background-color: rgba(10, 12, 16, 0.95);
-            backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 100;
             padding: 15px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .logo-container {
+        .pub-logo {
             display: flex;
             align-items: center;
             gap: 12px;
-            cursor: pointer;
         }
 
-        .logo-icon {
+        .pub-logo-icon {
             background-color: var(--primary-red);
             color: white;
-            width: 45px;
-            height: 45px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 22px;
             font-weight: 900;
-            box-shadow: 0 0 15px rgba(229, 9, 20, 0.5);
+            font-size: 20px;
+            box-shadow: 0 0 12px rgba(229,9,20,0.5);
         }
 
-        .logo-text h1 {
-            font-size: 20px;
+        .pub-logo-text h1 {
+            font-size: 18px;
             font-weight: 900;
-            letter-spacing: -0.5px;
             line-height: 1;
         }
+        .pub-logo-text h1 span { color: var(--primary-red); }
+        .pub-logo-text p { font-size: 10px; color: var(--text-muted); letter-spacing: 2px; font-weight: 700; }
 
-        .logo-text h1 span {
-            color: var(--primary-red);
-        }
-
-        .logo-text p {
-            font-size: 11px;
-            color: var(--text-muted);
-            letter-spacing: 2px;
-            font-weight: 700;
-        }
-
-        nav ul {
+        .pub-nav {
             display: flex;
             list-style: none;
             gap: 25px;
         }
 
-        nav a {
+        .pub-nav a {
             color: var(--text-main);
             text-decoration: none;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
-            transition: 0.3s;
             cursor: pointer;
+            transition: 0.3s;
         }
+        .pub-nav a:hover { color: var(--primary-red); }
 
-        nav a:hover, nav a.active {
-            color: var(--primary-red);
-        }
-
-        .btn-live-header {
+        .btn-live-red {
             background-color: var(--primary-red);
             color: white;
             border: none;
@@ -122,21 +109,10 @@
             align-items: center;
             gap: 8px;
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(229, 9, 20, 0.4);
-            animation: pulse 2s infinite;
         }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(229, 9, 20, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0); }
-        }
-
-        /* HERO SECTION */
-        .hero {
-            position: relative;
-            background: linear-gradient(rgba(10, 12, 16, 0.85), rgba(10, 12, 16, 0.95)),
-                        url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=1600&auto=format&fit=crop') center/cover;
+        .pub-hero {
+            background: linear-gradient(rgba(10,12,16,0.85), rgba(10,12,16,0.95)), url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=1600&auto=format&fit=crop') center/cover;
             padding: 60px 40px;
             display: flex;
             justify-content: space-between;
@@ -144,146 +120,14 @@
             border-bottom: 1px solid var(--border-color);
         }
 
-        .hero-left {
-            max-width: 600px;
-        }
-
-        .hero-title {
-            font-size: 42px;
-            font-weight: 900;
-            line-height: 1.1;
-            margin-bottom: 10px;
-        }
-
-        .hero-title span {
-            color: var(--primary-red);
-        }
-
-        .hero-subtitle {
-            font-size: 18px;
-            color: var(--text-muted);
-            margin-bottom: 30px;
-        }
-
-        /* PLAYER HERO CONTROLS */
-        .player-card {
-            background: rgba(18, 22, 32, 0.8);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px 25px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            backdrop-filter: blur(10px);
-            max-width: 500px;
-        }
-
-        .btn-play-large {
-            width: 60px;
-            height: 60px;
-            background-color: var(--primary-red);
-            border-radius: 50%;
-            border: none;
-            color: white;
-            font-size: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: 0.3s;
-            flex-shrink: 0;
-        }
-
-        .btn-play-large:hover {
-            transform: scale(1.08);
-            background-color: var(--primary-red-hover);
-        }
-
-        .player-info {
-            flex-grow: 1;
-        }
-
-        .player-status {
-            font-size: 12px;
-            color: var(--primary-red);
-            font-weight: 700;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .player-status-dot {
-            width: 8px;
-            height: 8px;
-            background-color: var(--primary-red);
-            border-radius: 50%;
-        }
-
-        .player-song-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin: 4px 0 2px 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 250px;
-        }
-
-        .player-song-artist {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        .sound-wave {
-            display: flex;
-            align-items: flex-end;
-            gap: 3px;
-            height: 25px;
-        }
-
-        .sound-bar {
-            width: 3px;
-            background-color: var(--primary-red);
-            border-radius: 3px;
-            animation: quiet 0.5s ease-in-out infinite alternate;
-        }
-
-        .sound-bar:nth-child(2) { animation-delay: 0.2s; }
-        .sound-bar:nth-child(3) { animation-delay: 0.4s; }
-        .sound-bar:nth-child(4) { animation-delay: 0.6s; }
-
-        @keyframes quiet {
-            0% { height: 5px; }
-            100% { height: 22px; }
-        }
-
-        .hero-right-banner {
-            text-align: right;
-            max-width: 400px;
-        }
-
-        .hero-right-banner h2 {
-            font-size: 38px;
-            font-weight: 900;
-            line-height: 1.2;
-            color: var(--text-main);
-        }
-
-        .hero-right-banner h2 span {
-            color: var(--primary-red);
-            display: block;
-        }
-
-        /* GRID BUTTONS (5 CARDS) */
-        .cards-container {
+        .pub-cards-grid {
             padding: 40px;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
         }
 
-        .action-card {
+        .pub-card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 12px;
@@ -296,62 +140,15 @@
             align-items: center;
             justify-content: center;
         }
+        .pub-card:hover { transform: translateY(-4px); background-color: var(--bg-card-hover); border-color: var(--primary-red); }
+        .pub-card.red-bg { background-color: var(--primary-red); border-color: var(--primary-red); }
+        .pub-card i { font-size: 30px; margin-bottom: 10px; }
+        .pub-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+        .pub-card p { font-size: 12px; color: var(--text-muted); }
+        .pub-card.red-bg p { color: rgba(255,255,255,0.8); }
 
-        .action-card:hover {
-            transform: translateY(-5px);
-            background-color: var(--bg-card-hover);
-            border-color: var(--primary-red);
-        }
-
-        .action-card.highlight {
-            background-color: var(--primary-red);
-            border-color: var(--primary-red);
-        }
-
-        .action-card.highlight:hover {
-            background-color: var(--primary-red-hover);
-        }
-
-        .action-card i {
-            font-size: 32px;
-            margin-bottom: 12px;
-            color: var(--text-main);
-        }
-
-        .action-card h3 {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .action-card p {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .action-card.highlight p {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .social-links {
-            display: flex;
-            gap: 15px;
-            margin-top: 10px;
-            font-size: 18px;
-        }
-
-        .social-links a {
-            color: var(--text-main);
-            transition: 0.3s;
-        }
-
-        .social-links a:hover {
-            color: var(--primary-red);
-        }
-
-        /* TICKER / ULTIMAS TOCADAS */
-        .ticker-bar {
-            background-color: #07080b;
+        .pub-ticker {
+            background-color: #06080b;
             border-top: 1px solid var(--border-color);
             border-bottom: 1px solid var(--border-color);
             padding: 12px 40px;
@@ -359,907 +156,444 @@
             align-items: center;
             gap: 20px;
             font-size: 13px;
-        }
-
-        .ticker-title {
-            color: var(--primary-red);
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-        }
-
-        .ticker-content {
-            flex-grow: 1;
-            overflow: hidden;
-            white-space: nowrap;
             color: var(--text-muted);
         }
 
-        .ticker-items {
-            display: inline-block;
-            animation: marquee 25s linear infinite;
-        }
-
-        @keyframes marquee {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-        }
-
-        .ticker-items span {
-            margin-right: 30px;
-        }
-
-        .ticker-items b {
-            color: var(--text-main);
-        }
-
-        /* DYNAMIC SECTIONS CONTAINER */
-        .content-section {
-            padding: 40px;
+        /* ------------------ PAINEL DO LOCUTOR (IMAGEM 2) ------------------ */
+        #studio-panel {
             display: none;
-        }
-
-        .content-section.active {
-            display: block;
-        }
-
-        .section-header {
-            margin-bottom: 25px;
-            border-left: 4px solid var(--primary-red);
-            padding-left: 15px;
-        }
-
-        .section-header h2 {
-            font-size: 24px;
-            font-weight: 800;
-        }
-
-        /* LISTS & TABLES */
-        .grid-2 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .card-list-item {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .team-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 20px;
-        }
-
-        .team-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .team-card img {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 12px;
-            border: 2px solid var(--primary-red);
-        }
-
-        .team-card h4 {
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .team-card p {
-            font-size: 12px;
-            color: var(--primary-red);
-            font-weight: 600;
-            margin-top: 4px;
-        }
-
-        /* MODAL LOGIN */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: 0.3s;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .login-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            width: 100%;
-            max-width: 400px;
-            padding: 40px 30px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            position: relative;
-        }
-
-        .login-card h2 {
-            font-size: 22px;
-            font-weight: 800;
-            margin-top: 15px;
-            margin-bottom: 5px;
-        }
-
-        .login-card p {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-bottom: 25px;
-        }
-
-        .input-group {
-            position: relative;
-            margin-bottom: 18px;
-        }
-
-        .input-group i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-        }
-
-        .input-group input {
-            width: 100%;
-            background-color: #0a0c10;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px 15px 12px 45px;
-            color: white;
-            font-size: 14px;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        .input-group input:focus {
-            border-color: var(--primary-red);
-        }
-
-        .btn-submit {
-            width: 100%;
-            background-color: var(--primary-red);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 10px;
-        }
-
-        .btn-submit:hover {
-            background-color: var(--primary-red-hover);
-        }
-
-        .btn-secondary {
-            width: 100%;
-            background-color: transparent;
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-secondary:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-
-        /* STUDIO DASHBOARD (PAINEL PROTEGIDO) */
-        .studio-container {
-            display: none;
-            padding: 30px;
+            min-height: 100vh;
             background-color: #07090e;
-            min-height: calc(100vh - 75px);
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 65px 1fr 40px;
+            grid-template-areas:
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
         }
+        #studio-panel.active { display: grid; }
 
-        .studio-container.active {
-            display: block;
-        }
-
-        .studio-header {
+        .st-header {
+            grid-area: header;
+            background-color: #0b0e14;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: var(--bg-card);
-            padding: 15px 25px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 25px;
+            padding: 0 25px;
         }
 
-        .studio-nav {
+        .st-sidebar {
+            grid-area: sidebar;
+            background-color: #0b0e14;
+            border-right: 1px solid var(--border-color);
             display: flex;
-            gap: 15px;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 15px;
         }
 
-        .studio-nav-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 8px 16px;
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: 0.3s;
+        .st-menu { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+        .st-menu li a {
+            display: flex; align-items: center; gap: 12px; padding: 12px 15px;
+            color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 600; border-radius: 8px; transition: 0.3s;
         }
+        .st-menu li.active a, .st-menu li a:hover { background-color: var(--primary-red); color: white; }
 
-        .studio-nav-btn.active, .studio-nav-btn:hover {
-            background-color: var(--accent-blue);
-            color: white;
-        }
-
-        .studio-grid {
+        .st-main {
+            grid-area: main;
+            padding: 20px;
+            overflow-y: auto;
             display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 25px;
+            grid-template-columns: 1fr 340px;
+            gap: 20px;
         }
 
-        .studio-panel {
+        .st-footer {
+            grid-area: footer;
+            background-color: #0b0e14;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* CARD TOPO NO AR */
+        .card-onair {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 20px;
-            margin-bottom: 25px;
-        }
-
-        .panel-title {
-            font-size: 14px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            color: var(--accent-blue);
-            text-transform: uppercase;
-            margin-bottom: 15px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
-        /* SOUND PADS */
-        .pads-grid {
+        /* TABELA PLAYLIST */
+        .playlist-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .playlist-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        .playlist-table th { text-align: left; font-size: 11px; color: var(--text-muted); padding: 8px; border-bottom: 1px solid var(--border-color); }
+        .playlist-table td { padding: 10px 8px; font-size: 13px; border-bottom: 1px solid rgba(35,41,54,0.4); }
+
+        /* PADS EFEITOS (10 SLOTS) */
+        .effects-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .effects-10-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 12px;
         }
-
-        .pad-btn {
-            background-color: #1a202c;
+        .effect-btn-pad {
+            background-color: #171f30;
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 15px;
+            padding: 10px;
             text-align: center;
             cursor: pointer;
             transition: 0.2s;
         }
+        .effect-btn-pad:hover { border-color: var(--primary-red); background-color: #1f2a42; }
 
-        .pad-btn:active {
-            transform: scale(0.95);
-            background-color: var(--accent-blue);
-        }
-
-        .pad-btn p {
-            font-size: 12px;
-            font-weight: 700;
-            margin-top: 5px;
-        }
-
-        /* SLIDERS AUDIO CONTROL */
-        .controls-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-
-        .fader-group {
-            margin-bottom: 15px;
-        }
-
-        .fader-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: var(--text-muted);
-        }
-
-        .fader-group input[type="range"] {
-            width: 100%;
-            accent-color: var(--accent-blue);
-        }
-
-        /* FORM MANAGEMENT */
-        .admin-form {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 15px;
-        }
-
-        .admin-form input, .admin-form select {
-            background-color: #0a0c10;
+        /* LATERAL DIREITA: OUVINTES & CHAT */
+        .right-box {
+            background-color: var(--bg-card);
             border: 1px solid var(--border-color);
-            padding: 10px;
-            border-radius: 6px;
-            color: white;
-            outline: none;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .listener-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 6px 0; border-bottom: 1px solid rgba(35,41,54,0.3); font-size: 12px;
+        }
+        .chat-feed-box {
+            max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin: 10px 0; font-size: 12px;
         }
 
-        .btn-blue {
-            background-color: var(--accent-blue);
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 6px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.3s;
+        /* MODAL LOGIN */
+        .modal-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: 0.3s;
         }
-
-        .btn-blue:hover {
-            opacity: 0.9;
-        }
-
-        /* FOOTER */
-        footer {
-            margin-top: auto;
-            background-color: #06070a;
-            border-top: 1px solid var(--border-color);
-            padding: 20px 40px;
-            text-align: center;
-            font-size: 12px;
-            color: var(--text-muted);
+        .modal-bg.active { opacity: 1; visibility: visible; }
+        .login-card-box {
+            background-color: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 16px; width: 100%; max-width: 380px; padding: 40px 30px; text-align: center;
         }
     </style>
 </head>
 <body>
 
-    <!-- HEADER PUBLICO -->
-    <header id="public-header">
-        <div class="logo-container" onclick="showSection('home')">
-            <div class="logo-icon">G</div>
-            <div class="logo-text">
-                <h1>GAZETA <span>FM</span></h1>
-                <p>NACIONAL PLAYER</p>
+    <!-- 1. SITE PÚBLICO (PRIMEIRA IMAGEM) -->
+    <div id="public-site">
+        <header class="pub-header">
+            <div class="pub-logo">
+                <div class="pub-logo-icon">G</div>
+                <div class="pub-logo-text">
+                    <h1>GAZETA <span>FM</span></h1>
+                    <p>NACIONAL PLAYER</p>
+                </div>
             </div>
-        </div>
-
-        <nav>
-            <ul>
-                <li><a onclick="showSection('home')" class="active">Início</a></li>
-                <li><a onclick="showSection('programacao')">Programação</a></li>
-                <li><a onclick="showSection('equipe')">Equipe</a></li>
-                <li><a onclick="showSection('mais-pedidas')">Mais Pedidas</a></li>
-                <li><a onclick="openModal('modal-pedir')">Pedir Música</a></li>
+            <ul class="pub-nav">
+                <li><a>Início</a></li>
+                <li><a>Programação</a></li>
+                <li><a>Equipe</a></li>
+                <li><a>Pedir Música</a></li>
+                <li><a>Ouvintes</a></li>
+                <li><a>Contato</a></li>
             </ul>
-        </nav>
+            <button class="btn-live-red" onclick="openLoginModal()">
+                <i class="fa-solid fa-lock"></i> Painel do Locutor
+            </button>
+        </header>
 
-        <button class="btn-live-header" onclick="openModal('modal-login')">
-            <i class="fa-solid fa-lock"></i> Painel do Locutor
-        </button>
-    </header>
-
-    <!-- VIEWS PUBLICAS -->
-    <main id="public-view">
-        <!-- HERO AREA -->
-        <section class="hero">
-            <div class="hero-left">
-                <div class="hero-title">A sua rádio, <span>em todo lugar!</span></div>
-                <div class="hero-subtitle">Música, Informação e muita Interação!</div>
-
-                <!-- PLAYER CARD -->
-                <div class="player-card">
-                    <button class="btn-play-large" id="main-play-btn" onclick="togglePlay()">
-                        <i class="fa-solid fa-play" id="play-icon"></i>
+        <section class="pub-hero">
+            <div style="max-width:600px;">
+                <h2 style="font-size:42px; font-weight:900; margin-bottom:12px;">GAZETA FM <br><span style="color:var(--primary-red);">NACIONAL PLAYER</span></h2>
+                <p style="font-size:18px; margin-bottom:25px;">A sua rádio, em todo lugar!</p>
+                <div style="background:rgba(18,22,32,0.8); border:1px solid var(--border-color); padding:20px; border-radius:12px; display:flex; align-items:center; gap:20px;">
+                    <button onclick="alert('Reproduzindo áudio ao vivo!')" style="width:55px; height:55px; background:var(--primary-red); border-radius:50%; border:none; color:white; font-size:20px; cursor:pointer;">
+                        <i class="fa-solid fa-play"></i>
                     </button>
-                    <div class="player-info">
-                        <div class="player-status">
-                            <div class="player-status-dot"></div> AO VIVO - GAZETA FM
-                        </div>
-                        <div class="player-song-title" id="current-track">Sertanejo Top 2026</div>
-                        <div class="player-song-artist" id="current-artist">Ao Vivo na Gazeta FM</div>
-                    </div>
-                    <div class="sound-wave">
-                        <div class="sound-bar"></div>
-                        <div class="sound-bar"></div>
-                        <div class="sound-bar"></div>
-                        <div class="sound-bar"></div>
+                    <div>
+                        <div style="color:var(--primary-red); font-size:11px; font-weight:700;">AO VIVO</div>
+                        <div style="font-size:15px; font-weight:700;">Gazeta FM Nacional Player</div>
+                        <div style="font-size:12px; color:var(--text-muted);">Tocando o melhor da sua companhia!</div>
                     </div>
                 </div>
             </div>
-
-            <div class="hero-right-banner">
-                <h2>Música<br>Informação<br><span>e muita Interação!</span></h2>
+            <div style="text-align:right;">
+                <h3 style="font-size:32px; font-weight:900; line-height:1.2;">Música<br>Informação<br><span style="color:var(--primary-red);">e muita Interação!</span></h3>
             </div>
         </section>
 
-        <!-- 5 CARDS DE AÇÃO RÁPIDA -->
-        <div class="cards-container">
-            <div class="action-card highlight" onclick="openModal('modal-pedir')">
+        <div class="pub-cards-grid">
+            <div class="pub-card red-bg">
                 <i class="fa-solid fa-music"></i>
                 <h3>Pedir Música</h3>
                 <p>Escolha sua música favorita</p>
             </div>
-
-            <div class="action-card" onclick="openModal('modal-chat')">
+            <div class="pub-card">
                 <i class="fa-solid fa-comments"></i>
                 <h3>Chat</h3>
                 <p>Converse com a nossa equipe</p>
             </div>
-
-            <div class="action-card" onclick="showSection('programacao')">
+            <div class="pub-card">
                 <i class="fa-solid fa-calendar-days"></i>
                 <h3>Programação</h3>
                 <p>Confira nossa grade de horários</p>
             </div>
-
-            <div class="action-card" onclick="showSection('equipe')">
+            <div class="pub-card">
                 <i class="fa-solid fa-users"></i>
                 <h3>Equipe</h3>
                 <p>Conheça nossos locutores</p>
             </div>
-
-            <div class="action-card">
-                <h3>FIQUE LIGADO!</h3>
-                <p style="margin-bottom: 8px;">Siga nossas redes sociais</p>
-                <div class="social-links">
-                    <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
-                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#"><i class="fa-brands fa-youtube"></i></a>
-                    <a href="#"><i class="fa-brands fa-tiktok"></i></a>
+            <div class="pub-card" style="text-align:left; align-items:flex-start;">
+                <h3 style="color:var(--primary-red);">FIQUE LIGADO!</h3>
+                <p style="margin-bottom:10px;">A Gazeta FM sempre com você, 24 horas por dia!</p>
+                <div style="display:flex; gap:12px; font-size:16px;">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    <i class="fa-brands fa-instagram"></i>
+                    <i class="fa-brands fa-youtube"></i>
+                    <i class="fa-brands fa-tiktok"></i>
                 </div>
             </div>
         </div>
 
-        <!-- TICKER ULTIMAS TOCADAS -->
-        <div class="ticker-bar">
-            <div class="ticker-title"><i class="fa-solid fa-compact-disc"></i> ÚLTIMAS MÚSICAS TOCADAS:</div>
-            <div class="ticker-content">
-                <div class="ticker-items" id="ticker-list">
-                    <span><b>Gusttavo Lima</b> - Bloqueado</span>
-                    <span><b>Henrique & Juliano</b> - Arranhão</span>
-                    <span><b>Ana Castela</b> - Solteiro Forçado</span>
-                    <span><b>Maiara & Maraisa</b> - Medo Bobo</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- SECÇÃO PROGRAMAÇÃO -->
-        <section id="sec-programacao" class="content-section">
-            <div class="section-header">
-                <h2>Grade de Programação</h2>
-            </div>
-            <div class="grid-2" id="programacao-list">
-                <!-- Preenchido via JS -->
-            </div>
-        </section>
-
-        <!-- SECÇÃO EQUIPE -->
-        <section id="sec-equipe" class="content-section">
-            <div class="section-header">
-                <h2>Nossa Equipe</h2>
-            </div>
-            <div class="team-grid" id="equipe-list">
-                <!-- Preenchido via JS -->
-            </div>
-        </section>
-
-        <!-- SECÇÃO MAIS PEDIDAS -->
-        <section id="sec-mais-pedidas" class="content-section">
-            <div class="section-header">
-                <h2>As Mais Pedidas da Rádio</h2>
-            </div>
-            <div class="grid-2" id="pedidas-list">
-                <!-- Preenchido via JS -->
-            </div>
-        </section>
-    </main>
-
-    <!-- ESTÚDIO / PAINEL DO LOCUTOR (PROTEGIDO) -->
-    <div id="studio-view" class="studio-container">
-        <div class="studio-header">
-            <div class="logo-container">
-                <div class="logo-icon" style="background-color: var(--accent-blue);">G</div>
-                <div class="logo-text">
-                    <h1>ESTÚDIO <span>GAZETA FM</span></h1>
-                    <p>PAINEL DE CONTROL E LOCUÇÃO</p>
-                </div>
-            </div>
-
-            <div class="studio-nav">
-                <button class="studio-nav-btn active" onclick="switchStudioTab('estudio')">Mesa de Som</button>
-                <button class="studio-nav-btn" onclick="switchStudioTab('gerenciar-prog')">Editar Programação</button>
-                <button class="studio-nav-btn" onclick="switchStudioTab('gerenciar-equipe')">Editar Equipe</button>
-                <button class="studio-nav-btn" onclick="switchStudioTab('gerenciar-pedidas')">Mais Pedidas</button>
-            </div>
-
-            <button class="btn-secondary" style="width: auto;" onclick="logoutStudio()">
-                <i class="fa-solid fa-right-from-bracket"></i> Sair do Painel
-            </button>
-        </div>
-
-        <!-- ABA MESA DE SOM -->
-        <div id="tab-estudio" class="studio-tab-content">
-            <div class="studio-grid">
-                <div>
-                    <!-- CONTROLES DE ÁUDIO -->
-                    <div class="studio-panel">
-                        <div class="panel-title"><i class="fa-solid fa-sliders"></i> Controles de Áudio & Microfone</div>
-                        <div class="controls-grid">
-                            <div class="fader-group">
-                                <label>Microfone Principal (Mic 1)</label>
-                                <input type="range" min="0" max="100" value="80">
-                            </div>
-                            <div class="fader-group">
-                                <label>Microfone Convidado (Mic 2)</label>
-                                <input type="range" min="0" max="100" value="50">
-                            </div>
-                            <div class="fader-group">
-                                <label>Volume das Músicas</label>
-                                <input type="range" min="0" max="100" value="90">
-                            </div>
-                            <div class="fader-group">
-                                <label>Master Output</label>
-                                <input type="range" min="0" max="100" value="100">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- BOTOEIRA DE VINHETAS -->
-                    <div class="studio-panel">
-                        <div class="panel-title"><i class="fa-solid fa-bolt"></i> Botoeira de Vinhetas & Efeitos (8 Slots)</div>
-                        <div class="pads-grid">
-                            <div class="pad-btn" onclick="playFX('Vinheta Rádio')"><i class="fa-solid fa-play"></i><p>Vinheta 1</p></div>
-                            <div class="pad-btn" onclick="playFX('Jingle Gazeta')"><i class="fa-solid fa-play"></i><p>Jingle Gazeta</p></div>
-                            <div class="pad-btn" onclick="playFX('Efeito Aplausos')"><i class="fa-solid fa-play"></i><p>Aplausos</p></div>
-                            <div class="pad-btn" onclick="playFX('Efeito Risadas')"><i class="fa-solid fa-play"></i><p>Risadas</p></div>
-                            <div class="pad-btn" onclick="playFX('Transição 1')"><i class="fa-solid fa-play"></i><p>Transição 1</p></div>
-                            <div class="pad-btn" onclick="playFX('Hora Certa')"><i class="fa-solid fa-play"></i><p>Hora Certa</p></div>
-                            <div class="pad-btn" onclick="playFX('Chamada Comercial')"><i class="fa-solid fa-play"></i><p>Comercial</p></div>
-                            <div class="pad-btn" onclick="playFX('Vinheta Plantão')"><i class="fa-solid fa-play"></i><p>Plantão</p></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PAINEL LATERAL PEDIDOS -->
-                <div>
-                    <div class="studio-panel">
-                        <div class="panel-title"><i class="fa-solid fa-envelope-open-text"></i> Pedidos dos Ouvintes</div>
-                        <div id="live-requests-list" style="max-height: 350px; overflow-y: auto;">
-                            <!-- Pedidos chegam aqui -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ABA EDITAR PROGRAMAÇÃO -->
-        <div id="tab-gerenciar-prog" class="studio-tab-content" style="display: none;">
-            <div class="studio-panel">
-                <div class="panel-title"><i class="fa-solid fa-pen-to-square"></i> Adicionar/Editar Programa</div>
-                <form class="admin-form" onsubmit="addProgram(event)">
-                    <input type="text" id="prog-nome" placeholder="Nome do Programa" required>
-                    <input type="text" id="prog-horario" placeholder="Horário (ex: 08:00 - 12:00)" required>
-                    <input type="text" id="prog-locutor" placeholder="Locutor Responsável" required>
-                    <button type="submit" class="btn-blue">Adicionar à Grade</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- ABA EDITAR EQUIPE -->
-        <div id="tab-gerenciar-equipe" class="studio-tab-content" style="display: none;">
-            <div class="studio-panel">
-                <div class="panel-title"><i class="fa-solid fa-user-plus"></i> Adicionar Membro da Equipe</div>
-                <form class="admin-form" onsubmit="addTeamMember(event)">
-                    <input type="text" id="equipe-nome" placeholder="Nome do Locutor" required>
-                    <input type="text" id="equipe-cargo" placeholder="Cargo/Função" required>
-                    <input type="text" id="equipe-foto" placeholder="URL da Foto Avatar" value="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop">
-                    <button type="submit" class="btn-blue">Adicionar Locutor</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- ABA EDITAR MAIS PEDIDAS -->
-        <div id="tab-gerenciar-pedidas" class="studio-tab-content" style="display: none;">
-            <div class="studio-panel">
-                <div class="panel-title"><i class="fa-solid fa-list-ol"></i> Cadastrar Músicas Mais Pedidas</div>
-                <form class="admin-form" onsubmit="addTopSong(event)">
-                    <input type="text" id="song-artista" placeholder="Artista/Banda" required>
-                    <input type="text" id="song-titulo" placeholder="Nome da Música" required>
-                    <button type="submit" class="btn-blue">Adicionar ao Ranking</button>
-                </form>
-            </div>
+        <div class="pub-ticker">
+            <span style="color:var(--primary-red); font-weight:700;"><i class="fa-solid fa-compact-disc"></i> Últimas músicas tocadas</span>
+            <span>|</span>
+            <span>Gusttavo Lima - Bloqueado</span>
+            <span>|</span>
+            <span>Henrique & Juliano - Arranhão</span>
+            <span>|</span>
+            <span>Ana Castela - Solteiro Forçado</span>
+            <span>|</span>
+            <span>Maiara & Maraisa - Medo Bobo</span>
         </div>
     </div>
 
-    <!-- MODAL DE LOGIN (EXATAMENTE COMO SOLICITADO) -->
-    <div class="modal-overlay" id="modal-login">
-        <div class="login-card">
-            <div class="logo-icon" style="margin: 0 auto;">G</div>
-            <h2>Painel do Locutor</h2>
-            <p>Faça seu login para acessar o painel de locução.</p>
+
+    <!-- 2. PAINEL DO LOCUTOR / ESTÚDIO (SEGUNDA IMAGEM) -->
+    <div id="studio-panel">
+        <header class="st-header">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div class="pub-logo-icon" style="width:36px; height:36px; font-size:16px;">G</div>
+                <div>
+                    <h1 style="font-size:15px; font-weight:900;">GAZETA <span style="color:var(--primary-red);">FM</span></h1>
+                    <p style="font-size:9px; color:var(--text-muted); font-weight:700; letter-spacing:1px;">NACIONAL PLAYER</p>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:25px; font-size:13px;">
+                <div style="background:rgba(229,9,20,0.15); border:1px solid var(--primary-red); color:var(--primary-red); padding:5px 12px; border-radius:20px; font-weight:700; display:flex; align-items:center; gap:6px;">
+                    <div style="width:7px; height:7px; background:var(--primary-red); border-radius:50%;"></div> Ao Vivo
+                </div>
+                <div><i class="fa-solid fa-user" style="color:var(--primary-red); margin-right:4px;"></i> Locutor: <b>João Silva</b></div>
+                <div><i class="fa-solid fa-clock" style="color:var(--primary-red); margin-right:4px;"></i> Horário: <b>14:32</b></div>
+                <button onclick="logoutStudio()" style="background-color:var(--primary-red); color:white; border:none; padding:7px 14px; border-radius:6px; font-weight:700; font-size:12px; cursor:pointer;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Sair do Painel
+                </button>
+            </div>
+        </header>
+
+        <aside class="st-sidebar">
+            <ul class="st-menu">
+                <li class="active"><a><i class="fa-solid fa-house"></i> Painel Inicial</a></li>
+                <li><a><i class="fa-solid fa-music"></i> Músicas</a></li>
+                <li><a><i class="fa-solid fa-bolt"></i> Vinhetas / Efeitos</a></li>
+                <li><a><i class="fa-solid fa-users"></i> Ouvintes</a></li>
+                <li><a><i class="fa-solid fa-microphone"></i> Pedir Música</a></li>
+                <li><a><i class="fa-solid fa-comments"></i> Chat</a></li>
+                <li><a><i class="fa-solid fa-calendar-days"></i> Programação</a></li>
+                <li><a><i class="fa-solid fa-chart-line"></i> Relatórios</a></li>
+                <li><a><i class="fa-solid fa-gear"></i> Configurações</a></li>
+            </ul>
+            <div style="background:linear-gradient(135deg, #151a28, #0b0e14); border:1px solid var(--border-color); border-radius:8px; padding:12px; text-align:center;">
+                <p style="font-size:10px; font-weight:700;">Aqui a sua rádio, em todo lugar!</p>
+            </div>
+        </aside>
+
+        <main class="st-main">
+            <!-- COLUNA ESQUERDA -->
+            <div>
+                <!-- CARD NO AR -->
+                <div class="card-onair">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:6px; font-weight:800; margin-bottom:4px;">
+                            <i class="fa-solid fa-microphone" style="color:var(--primary-red);"></i> No Ar <span style="background:var(--primary-red); font-size:9px; padding:2px 5px; border-radius:3px;">AO VIVO</span>
+                        </div>
+                        <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">Sua transmissão está ativa!</p>
+                        <button onclick="alert('Transmissão encerrada')" style="background:var(--primary-red); color:white; border:none; padding:8px 14px; border-radius:6px; font-weight:700; font-size:12px; cursor:pointer;">
+                            <i class="fa-solid fa-stop"></i> Finalizar Transmissão
+                        </button>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px; flex-grow:1; max-width:300px;">
+                        <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100" style="width:55px; height:55px; border-radius:6px; object-fit:cover;">
+                        <div style="flex-grow:1;">
+                            <span style="font-size:10px; color:var(--text-muted);">Agora no ar</span>
+                            <h4 style="font-size:14px; font-weight:800;">Gusttavo Lima</h4>
+                            <p style="font-size:12px; color:var(--text-muted);">Bloqueado</p>
+                            <div style="width:100%; height:3px; background:#232b3d; margin-top:6px; border-radius:2px;"><div style="width:75%; height:100%; background:var(--primary-red);"></div></div>
+                        </div>
+                    </div>
+                    <div style="background:#090b10; padding:10px; border-radius:6px; text-align:center; border:1px solid var(--border-color);">
+                        <span style="font-size:9px; color:var(--text-muted); display:block;">Tempo no ar</span>
+                        <strong style="font-size:12px; color:var(--btn-green);">02:48:17</strong>
+                    </div>
+                </div>
+
+                <!-- PLAYLIST DA RÁDIO -->
+                <div class="playlist-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h4 style="font-size:14px; font-weight:800;"><i class="fa-solid fa-list-music" style="color:var(--primary-red);"></i> Playlist da Rádio</h4>
+                        <button onclick="alert('Adicionar música')" style="background:var(--primary-red); color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:700; font-size:11px; cursor:pointer;">
+                            <i class="fa-solid fa-plus"></i> Adicionar Música
+                        </button>
+                    </div>
+                    <table class="playlist-table">
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Título</th><th>Artista</th><th>Duração</th><th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><b>1</b></td><td><b>Bloqueado</b></td><td>Gusttavo Lima</td><td>03:44</td><td><i class="fa-solid fa-play" style="color:var(--primary-red); cursor:pointer;"></i></td></tr>
+                            <tr><td>2</td><td>Nosso Quadro</td><td>Ana Castela</td><td>03:20</td><td><i class="fa-solid fa-play" style="cursor:pointer;"></i></td></tr>
+                            <tr><td>3</td><td>Faz de Conta</td><td>Zé Neto & Cristiano</td><td>03:18</td><td><i class="fa-solid fa-play" style="cursor:pointer;"></i></td></tr>
+                            <tr><td>4</td><td>Erro Planejado</td><td>Luan Santana</td><td>03:26</td><td><i class="fa-solid fa-play" style="cursor:pointer;"></i></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- VINHETAS / EFEITOS (10 PADS) -->
+                <div class="effects-box">
+                    <h4 style="font-size:14px; font-weight:800;"><i class="fa-solid fa-bolt" style="color:var(--primary-red);"></i> Vinhetas / Efeitos Sonoros</h4>
+                    <div class="effects-10-grid">
+                        <div class="effect-btn-pad" onclick="alert('Risos')"><i class="fa-solid fa-face-laugh"></i><h5 style="font-size:11px;">Risos</h5></div>
+                        <div class="effect-btn-pad" onclick="alert('Palmas')"><i class="fa-solid fa-hands-clapping"></i><h5 style="font-size:11px;">Palmas</h5></div>
+                        <div class="effect-btn-pad" onclick="alert('Sino')"><i class="fa-solid fa-bell"></i><h5 style="font-size:11px;">Sino</h5></div>
+                        <div class="effect-btn-pad" onclick="alert('Sirene')"><i class="fa-solid fa-triangle-exclamation"></i><h5 style="font-size:11px;">Sirene</h5></div>
+                        <div class="effect-btn-pad" onclick="alert('Torcida')"><i class="fa-solid fa-users"></i><h5 style="font-size:11px;">Torcida</h5></div>
+                        <div class="effect-btn-pad" onclick="alert('Telefone')"><i class="fa-solid fa-phone"></i><h5 style="font-size:11px;">Telefone</h5></div>
+                        <div class="effect-btn-pad" onclick="alert('Buzina')"><i class="fa-solid fa-bullhorn"></i><h5 style="font-size:11px;">Buzina</h5></div>
+                        <div class="effect-btn-pad" onclick="alert('Corrido')"><i class="fa-solid fa-music"></i><h5 style="font-size:11px;">Corrido</h5></div>
+                        <div class="effect-btn-pad" onclick="alert('Explosão')"><i class="fa-solid fa-bomb"></i><h5 style="font-size:11px;">Explosão</h5></div>
+                        <div class="effect-btn-pad" onclick="alert('Geral')"><i class="fa-solid fa-radio"></i><h5 style="font-size:11px;">Geral</h5></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUNA DIREITA -->
+            <div>
+                <!-- OUVINTES ONLINE -->
+                <div class="right-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <h4 style="font-size:12px; font-weight:800;"><i class="fa-solid fa-users" style="color:var(--primary-red);"></i> Ouvintes Online</h4>
+                        <span style="font-size:10px; color:var(--btn-green); font-weight:700;">● 124 ouvintes</span>
+                    </div>
+                    <div>
+                        <div class="listener-row"><span><b>LucasRJ</b><br><small style="color:var(--text-muted);">São José do Rio Preto - SP</small></span><i class="fa-solid fa-circle" style="font-size:5px; color:var(--btn-green);"></i></div>
+                        <div class="listener-row"><span><b>AnaSilva</b><br><small style="color:var(--text-muted);">Mirassol - SP</small></span><i class="fa-solid fa-circle" style="font-size:5px; color:var(--btn-green);"></i></div>
+                        <div class="listener-row"><span><b>PedroChavoso</b><br><small style="color:var(--text-muted);">Bady Bassitt - SP</small></span><i class="fa-solid fa-circle" style="font-size:5px; color:var(--btn-green);"></i></div>
+                        <div class="listener-row"><span><b>JulianaV</b><br><small style="color:var(--text-muted);">Uchoa - SP</small></span><i class="fa-solid fa-circle" style="font-size:5px; color:var(--btn-green);"></i></div>
+                    </div>
+                </div>
+
+                <!-- CHAT DA RÁDIO -->
+                <div class="right-box" style="display:flex; flex-direction:column;">
+                    <h4 style="font-size:12px; font-weight:800;"><i class="fa-solid fa-comments" style="color:var(--primary-red);"></i> Chat da Rádio</h4>
+                    <div class="chat-feed-box">
+                        <div><b>LucasRJ:</b> <span style="color:#d1d5db;">Manda um abraço pra minha mãe! 💙</span></div>
+                        <div><b>AnaSilva:</b> <span style="color:#d1d5db;">Amo essa rádio!</span></div>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" placeholder="Digite sua mensagem..." style="flex-grow:1; background:#0a0c10; border:1px solid var(--border-color); padding:7px; border-radius:6px; color:white; font-size:11px; outline:none;">
+                        <button style="background:var(--primary-red); border:none; color:white; padding:0 10px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="st-footer">
+            <span>GAZETA FM NACIONAL PLAYER - Painel do Locutor</span>
+            <span style="color:var(--btn-green);"><i class="fa-solid fa-signal"></i> Conexão estável</span>
+        </footer>
+    </div>
+
+
+    <!-- 3. MODAL DE LOGIN (COM USUÁRIO E SENHA) -->
+    <div class="modal-bg active" id="login-modal">
+        <div class="login-card-box">
+            <div class="pub-logo-icon" style="margin: 0 auto 12px auto;">G</div>
+            <h2 style="font-size:20px; font-weight:800; margin-bottom:4px;">Painel do Locutor</h2>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">Faça seu login para acessar o painel de locução.</p>
 
             <form onsubmit="handleLogin(event)">
-                <div class="input-group">
-                    <i class="fa-solid fa-user"></i>
-                    <input type="text" id="login-user" placeholder="Usuário" required>
+                <div style="margin-bottom:12px; text-align:left;">
+                    <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">Usuário</label>
+                    <input type="text" id="user" value="admin" required style="width:100%; background:#0a0c10; border:1px solid var(--border-color); padding:10px; border-radius:6px; color:white; outline:none;">
                 </div>
-                <div class="input-group">
-                    <i class="fa-solid fa-lock"></i>
-                    <input type="password" id="login-pass" placeholder="Senha" required>
+                <div style="margin-bottom:18px; text-align:left;">
+                    <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">Senha</label>
+                    <input type="password" id="pass" value="admin" required style="width:100%; background:#0a0c10; border:1px solid var(--border-color); padding:10px; border-radius:6px; color:white; outline:none;">
                 </div>
-
-                <button type="submit" class="btn-submit">Entrar</button>
+                <button type="submit" style="width:100%; background:var(--primary-red); color:white; border:none; padding:11px; border-radius:6px; font-weight:700; cursor:pointer;">Entrar</button>
             </form>
-
-            <div style="margin: 15px 0; font-size: 12px; color: var(--text-muted);">ou</div>
-
-            <button class="btn-secondary" onclick="closeModal('modal-login')">
-                <i class="fa-solid fa-headphones"></i> Acessar como Ouvinte
-            </button>
+            <button onclick="accessAsListener()" style="width:100%; background:transparent; color:var(--text-muted); border:none; margin-top:12px; font-size:12px; cursor:pointer;">Acessar como Ouvinte</button>
         </div>
     </div>
 
-    <!-- MODAL PEDIR MÚSICA -->
-    <div class="modal-overlay" id="modal-pedir">
-        <div class="login-card">
-            <h2>Pedir Música</h2>
-            <p>Envie o seu pedido diretamente para o estúdio!</p>
 
-            <form onsubmit="handleRequestSong(event)">
-                <div class="input-group">
-                    <i class="fa-solid fa-user"></i>
-                    <input type="text" id="req-nome" placeholder="Seu Nome" required>
-                </div>
-                <div class="input-group">
-                    <i class="fa-solid fa-music"></i>
-                    <input type="text" id="req-musica" placeholder="Nome da Música e Artista" required>
-                </div>
-                <div class="input-group">
-                    <i class="fa-solid fa-heart"></i>
-                    <input type="text" id="req-recado" placeholder="Oferecimento / Recado">
-                </div>
-
-                <button type="submit" class="btn-submit">Enviar Pedido</button>
-                <button type="button" class="btn-secondary" onclick="closeModal('modal-pedir')">Cancelar</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- FOOTER -->
-    <footer>
-        <p>&copy; 2026 GAZETA FM NACIONAL PLAYER - Todos os direitos reservados.</p>
-    </footer>
-
-    <!-- LOGICA JAVASCRIPT -->
+    <!-- SCRIPTS DE CONTROLE -->
     <script>
-        // ESTADO GLOBAL DA APLICAÇÃO
-        let isPlaying = false;
-
-        let programacaoData = [
-            { id: 1, nome: "Manhã Sertaneja", horario: "06:00 - 10:00", locutor: "Carlos Eduardo" },
-            { id: 2, nome: "Gazeta Esporte & Notícias", horario: "10:00 - 12:00", locutor: "Mariana Silva" },
-            { id: 3, nome: "As Mais Pedidas da Tarde", horario: "12:00 - 16:00", locutor: "Roberto Lima" }
-        ];
-
-        let equipeData = [
-            { id: 1, nome: "Carlos Eduardo", cargo: "Locutor das Manhãs", foto: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop" },
-            { id: 2, nome: "Mariana Silva", cargo: "Jornalista / Apresentadora", foto: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&auto=format&fit=crop" }
-        ];
-
-        let pedidasData = [
-            { id: 1, artista: "Gusttavo Lima", titulo: "Bloqueado", votos: 142 },
-            { id: 2, artista: "Ana Castela", titulo: "Solteiro Forçado", votos: 118 }
-        ];
-
-        let pedidosAoVivo = [];
-
-        // INICIALIZAÇÃO
-        window.onload = function() {
-            renderProgramacao();
-            renderEquipe();
-            renderPedidas();
-        };
-
-        // CONTROLE DO PLAYER
-        function togglePlay() {
-            const playIcon = document.getElementById('play-icon');
-            isPlaying = !isPlaying;
-
-            if (isPlaying) {
-                playIcon.className = 'fa-solid fa-pause';
-                alert('Iniciando áudio da rádio ao vivo!');
-            } else {
-                playIcon.className = 'fa-solid fa-play';
-            }
-        }
-
-        // ALTERNAR SEÇÕES PUBLICAS
-        function showSection(sectionId) {
-            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
-            if (sectionId !== 'home') {
-                const target = document.getElementById(`sec-${sectionId}`);
-                if (target) target.classList.add('active');
-            }
-        }
-
-        // RENDERIZAÇÃO DINÂMICA
-        function renderProgramacao() {
-            const container = document.getElementById('programacao-list');
-            container.innerHTML = programacaoData.map(p => `
-                <div class="card-list-item">
-                    <div>
-                        <h4 style="font-weight:700;">${p.nome}</h4>
-                        <p style="font-size:12px; color:var(--text-muted);">${p.locutor}</p>
-                    </div>
-                    <span style="color:var(--primary-red); font-weight:700;">${p.horario}</span>
-                </div>
-            `).join('');
-        }
-
-        function renderEquipe() {
-            const container = document.getElementById('equipe-list');
-            container.innerHTML = equipeData.map(e => `
-                <div class="team-card">
-                    <img src="${e.foto}" alt="${e.nome}">
-                    <h4>${e.nome}</h4>
-                    <p>${e.cargo}</p>
-                </div>
-            `).join('');
-        }
-
-        function renderPedidas() {
-            const container = document.getElementById('pedidas-list');
-            container.innerHTML = pedidasData.map((p, index) => `
-                <div class="card-list-item">
-                    <div>
-                        <h4 style="font-weight:700;">#${index+1} ${p.artista}</h4>
-                        <p style="font-size:12px; color:var(--text-muted);">${p.titulo}</p>
-                    </div>
-                    <span style="color:var(--accent-blue); font-weight:700;">${p.votos} pedidos</span>
-                </div>
-            `).join('');
-        }
-
-        // AUTENTICAÇÃO DO PAINEL (USUÁRIO: admin / SENHA: admin)
         function handleLogin(e) {
             e.preventDefault();
-            const user = document.getElementById('login-user').value;
-            const pass = document.getElementById('login-pass').value;
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
 
-            if (user === 'admin' && pass === 'admin') {
-                closeModal('modal-login');
-                document.getElementById('public-header').style.display = 'none';
-                document.getElementById('public-view').style.display = 'none';
-                document.getElementById('studio-view').classList.add('active');
+            if(u === 'admin' && p === 'admin') {
+                document.getElementById('login-modal').classList.remove('active');
+                document.getElementById('public-site').style.display = 'none';
+                document.getElementById('studio-panel').classList.add('active');
             } else {
-                alert('Usuário ou senha incorretos! Tente usuário: admin e senha: admin');
+                alert('Usuário ou senha incorretos! Utilize: admin / admin');
             }
+        }
+
+        function accessAsListener() {
+            document.getElementById('login-modal').classList.remove('active');
+            document.getElementById('public-site').style.display = 'block';
+            document.getElementById('studio-panel').classList.remove('active');
         }
 
         function logoutStudio() {
-            document.getElementById('studio-view').classList.remove('active');
-            document.getElementById('public-header').style.display = 'flex';
-            document.getElementById('public-view').style.display = 'block';
+            document.getElementById('studio-panel').classList.remove('active');
+            document.getElementById('public-site').style.display = 'block';
+            document.getElementById('login-modal').classList.add('active');
         }
 
-        // NAVEGAÇÃO INTERNA DO ESTÚDIO
-        function switchStudioTab(tabName) {
-            document.querySelectorAll('.studio-tab-content').forEach(tab => tab.style.display = 'none');
-            document.querySelectorAll('.studio-nav-btn').forEach(btn => btn.classList.remove('active'));
-
-            document.getElementById(`tab-${tabName}`).style.display = 'block';
-            event.target.classList.add('active');
-        }
-
-        // ADICIONAR CONTEÚDOS PELO LOCUTOR
-        function addProgram(e) {
-            e.preventDefault();
-            const nome = document.getElementById('prog-nome').value;
-            const horario = document.getElementById('prog-horario').value;
-            const locutor = document.getElementById('prog-locutor').value;
-
-            programacaoData.push({ id: Date.now(), nome, horario, locutor });
-            renderProgramacao();
-            alert('Programa cadastrado com sucesso!');
-            e.target.reset();
-        }
-
-        function addTeamMember(e) {
-            e.preventDefault();
-            const nome = document.getElementById('equipe-nome').value;
-            const cargo = document.getElementById('equipe-cargo').value;
-            const foto = document.getElementById('equipe-foto').value;
-
-            equipeData.push({ id: Date.now(), nome, cargo, foto });
-            renderEquipe();
-            alert('Membro da equipe adicionado!');
-            e.target.reset();
-        }
-
-        function addTopSong(e) {
-            e.preventDefault();
-            const artista = document.getElementById('song-artista').value;
-            const titulo = document.getElementById('song-titulo').value;
-
-            pedidasData.push({ id: Date.now(), artista, titulo, votos: 1 });
-            renderPedidas();
-            alert('Música adicionada ao ranking!');
-            e.target.reset();
-        }
-
-        // PEDIDOS DE MÚSICA DOS OUVINTES
-        function handleRequestSong(e) {
-            e.preventDefault();
-            const nome = document.getElementById('req-nome').value;
-            const musica = document.getElementById('req-musica').value;
-            const recado = document.getElementById('req-recado').value;
-
-            const reqContainer = document.getElementById('live-requests-list');
-            reqContainer.innerHTML = `
-                <div style="background:#1a202c; padding:10px; border-radius:6px; margin-bottom:8px;">
-                    <strong style="color:var(--accent-blue);">${nome}</strong> pediu:
-                    <p style="font-size:12px; margin:2px 0;"><b>${musica}</b></p>
-                    <small style="color:var(--text-muted);">${recado}</small>
-                </div>
-            ` + reqContainer.innerHTML;
-
-            closeModal('modal-pedir');
-            alert('Seu pedido foi enviado ao vivaço para o locutor!');
-            e.target.reset();
-        }
-
-        // MODAIS CONTROL
-        function openModal(id) {
-            document.getElementById(id).classList.add('active');
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
-        }
-
-        function playFX(nome) {
-            alert(`Disparando efeito sonoro: ${nome}`);
+        function openLoginModal() {
+            document.getElementById('login-modal').classList.add('active');
         }
     </script>
 </body>
