@@ -18,6 +18,10 @@ const chatHistory = [];
 const requestHistory = [];
 
 app.disable('x-powered-by');
+app.use((req, res, next) => {
+  if (['/server.js', '/package.json', '/README.md'].includes(req.path)) return res.sendStatus(404);
+  next();
+});
 app.use(express.static(path.join(__dirname), { extensions: ['html'] }));
 app.get('/health', (_req, res) => res.json({ ok: true, hostOnline: Boolean(hostSocketId), listeners: listeners.size }));
 
