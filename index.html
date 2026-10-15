@@ -880,8 +880,10 @@
                 studioBtnTxt.innerText = "Iniciar Transmissão";
             }
 
-            document.getElementById('config-locutor').value = appState.locutorName;
-            document.getElementById('config-show').value = appState.showTitle;
+            const locutorInput = document.getElementById('config-locutor');
+            const showInput = document.getElementById('config-show');
+            if (document.activeElement !== locutorInput) locutorInput.value = appState.locutorName;
+            if (document.activeElement !== showInput) showInput.value = appState.showTitle;
             document.getElementById('config-discord-url').value = appState.discordUrl;
             document.getElementById('discord-link-btn').href = appState.discordUrl;
         }
@@ -891,7 +893,13 @@
             appState.showTitle = document.getElementById('config-show').value || 'Gazeta FM Show';
             persistState();
             updateGlobalUI();
-            showToast('Salvo com sucesso!');
+            if (radioSocket && isHostAuthenticated) {
+                radioSocket.emit('host:program-config', {
+                    locutorName: appState.locutorName,
+                    showTitle: appState.showTitle
+                });
+            }
+            showToast('Dados da transmissão atualizados!');
         }
 
         // --- Studio 3-Dots Menu Dropdown ---
@@ -942,6 +950,12 @@
                 const sticky = document.getElementById('sticky-song-title');
                 if (marquee) marquee.innerText = title;
                 if (sticky) sticky.innerText = d.name;
+            });
+            radioSocket.on('radio:program-config', d => {
+                if (!d) return;
+                if (d.locutorName) appState.locutorName = d.locutorName;
+                if (d.showTitle) appState.showTitle = d.showTitle;
+                updateGlobalUI();
             });
             radioSocket.on('radio:stopped', () => { radioIsLive = false; appState.isLive = false; updateGlobalUI(); updateConnectionStatus('Locutor conectado — transmissão pausada'); });
             radioSocket.on('radio:host-offline', () => { hostSocketId = null; radioIsLive = false; appState.isLive = false; updateGlobalUI(); updateConnectionStatus('Locutor offline'); if(liveStreamAudio) liveStreamAudio.srcObject=null; });
