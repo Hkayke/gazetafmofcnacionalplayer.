@@ -669,6 +669,9 @@
     </footer>
 
 
+    <audio id="live-stream-audio" autoplay playsinline class="hidden"></audio>
+    <span id="radio-connection-status" class="sr-only" aria-live="polite">Conectando ao servidor</span>
+    <script src="/socket.io/socket.io.js"></script>
     <!-- JAVASCRIPT APP LOGIC -->
     <script>
         // --- State Management ---
@@ -802,18 +805,25 @@
         function handleLogin(e) {
             e.preventDefault();
             const u = document.getElementById('login-user').value.trim();
-            const p = document.getElementById('login-pass').value.trim();
-
-            if (u === 'admin' && p === '123456') {
+            const p = document.getElementById('login-pass').value;
+            if (!radioSocket || !radioSocket.connected) {
+                alert('Servidor de transmissão indisponível. Tente novamente em instantes.');
+                return;
+            }
+            radioSocket.emit('host:authenticate', { username: u, password: p }, result => {
+                if (!result?.ok) { alert(result?.message || 'Usuário ou senha incorretos.'); return; }
+                isHostAuthenticated = true;
                 closeLoginModal();
+                ensureAudioGraph();
                 switchView('studio');
                 showToast('Login efetuado com sucesso!');
-            } else {
-                alert('Usuário ou senha incorretos! Use admin / 123456');
-            }
+            });
         }
 
         function handleLogout() {
+            if (radioSocket && isHostAuthenticated) radioSocket.emit('host:logout');
+            isHostAuthenticated = false;
+            peerConnections.forEach((pc, id) => closePeer(id));
             switchView('listener');
             showToast('Você saiu do painel com sucesso.');
         }
@@ -891,6 +901,59 @@
         let activeAudioElement = null;
         let isPlaying = false;
         let studioChatFilter = 'chat';
+        let radioSocket = null, isHostAuthenticated = false, broadcastDestination = null;
+        let micBroadcastGainNode = null, musicBroadcastGainNode = null, liveStreamAudio = null;
+        const peerConnections = new Map();
+        let hostSocketId = null;
+
+        function connectRadioSocket() {
+            if (radioSocket || typeof io !== 'function') return;
+            radioSocket = io();
+            liveStreamAudio = document.getElementById('live-stream-audio');
+            radioSocket.on('connect', () => { radioSocket.emit('listener:ready'); updateConnectionStatus('Conectado ao servidor'); });
+            radioSocket.on('disconnect', () => updateConnectionStatus('Reconectando ao servidor...'));
+            radioSocket.on('radio:status', d => updateConnectionStatus(d?.hostOnline ? 'Locutor conectado' : 'Aguardando o locutor'));
+            radioSocket.on('radio:host-online', d => { hostSocketId = d.hostId; updateConnectionStatus('Locutor ao vivo'); });
+            radioSocket.on('radio:host-offline', () => { hostSocketId = null; updateConnectionStatus('Locutor offline'); if(liveStreamAudio) liveStreamAudio.srcObject=null; });
+            radioSocket.on('webrtc:offer', async d => {
+                try { const pc=createListenerPeer(d.hostId); await pc.setRemoteDescription(d.sdp); const answer=await pc.createAnswer(); await pc.setLocalDescription(answer); radioSocket.emit('webrtc:answer',{targetId:d.hostId,sdp:pc.localDescription}); }
+                catch(e){ console.error('Falha ao conectar ao áudio ao vivo:',e); }
+            });
+            radioSocket.on('webrtc:answer', async d => { const pc=peerConnections.get(d.fromId); if(pc && pc.signalingState!=='stable') try{await pc.setRemoteDescription(d.sdp)}catch(e){console.error(e)} });
+            radioSocket.on('webrtc:ice', async d => { const pc=peerConnections.get(d.fromId); if(pc&&d.candidate)try{await pc.addIceCandidate(d.candidate)}catch(e){console.error(e)} });
+            radioSocket.on('chat:history', d => { appState.publicChat=d.chat||[]; appState.studioChat=[...(d.chat||[]),...(d.requests||[])]; renderPublicChat();renderStudioChat(); });
+            radioSocket.on('chat:new', item => { appState.publicChat.push(item);appState.studioChat.push({...item,type:'chat'});appState.publicChat=appState.publicChat.slice(-150);appState.studioChat=appState.studioChat.slice(-300);renderPublicChat();renderStudioChat(); });
+            radioSocket.on('request:new', item => { appState.studioChat.push({...item,type:'request'});appState.studioChat=appState.studioChat.slice(-300);renderStudioChat(); });
+            radioSocket.on('listener:ready', async d => { if(isHostAuthenticated&&broadcastDestination&&d?.listenerId)try{await createHostPeer(d.listenerId)}catch(e){console.error(e)} });
+        }
+        function updateConnectionStatus(message) { const el=document.getElementById('radio-connection-status'); if(el)el.textContent=message; }
+        function ensureAudioGraph() {
+            if(!audioContext)audioContext=new(window.AudioContext||window.webkitAudioContext)();
+            if(!broadcastDestination)broadcastDestination=audioContext.createMediaStreamDestination();
+            if(!micBroadcastGainNode){micBroadcastGainNode=audioContext.createGain();micBroadcastGainNode.gain.value=1;micBroadcastGainNode.connect(broadcastDestination);}
+            if(!musicBroadcastGainNode){musicBroadcastGainNode=audioContext.createGain();musicBroadcastGainNode.gain.value=1;musicBroadcastGainNode.connect(broadcastDestination);}
+            return audioContext;
+        }
+        function makePeerConnection(remoteId) {
+            const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]});
+            peerConnections.set(remoteId,pc);
+            pc.onicecandidate=e=>{if(e.candidate&&radioSocket)radioSocket.emit('webrtc:ice',{targetId:remoteId,candidate:e.candidate});};
+            pc.onconnectionstatechange=()=>{if(['failed','closed'].includes(pc.connectionState))closePeer(remoteId);};
+            return pc;
+        }
+        async function createHostPeer(listenerId) {
+            if(peerConnections.has(listenerId)||!radioSocket||!broadcastDestination)return;
+            const pc=makePeerConnection(listenerId);
+            broadcastDestination.stream.getTracks().forEach(track=>pc.addTrack(track,broadcastDestination.stream));
+            const offer=await pc.createOffer();await pc.setLocalDescription(offer);
+            radioSocket.emit('webrtc:offer',{targetId:listenerId,sdp:pc.localDescription});
+        }
+        function createListenerPeer(hostId) {
+            closePeer(hostId);const pc=makePeerConnection(hostId);
+            pc.ontrack=e=>{if(liveStreamAudio){liveStreamAudio.srcObject=e.streams[0]||new MediaStream([e.track]);liveStreamAudio.play().catch(()=>showToast('Toque em Ouvir Música para liberar o áudio ao vivo.'));}updateConnectionStatus('Recebendo transmissão ao vivo');};
+            return pc;
+        }
+        function closePeer(id){const pc=peerConnections.get(id);if(pc){pc.ontrack=null;pc.close();peerConnections.delete(id);}}
 
         async function toggleMicrophone() {
             const btn = document.getElementById('mic-toggle-btn');
@@ -909,6 +972,7 @@
                     micMonitorGainNode.gain.value = document.getElementById('voice-return-toggle').checked ? 0.65 : 0;
                     micNode.connect(micMonitorGainNode);
                     micMonitorGainNode.connect(audioContext.destination);
+                    micNode.connect(micBroadcastGainNode);
 
                     isMicOpen = true;
                     btn.className = "flex-grow bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-2xl transition flex items-center justify-center gap-2 text-sm shadow-lg shadow-emerald-600/30";
@@ -923,6 +987,7 @@
                 }
             } else {
                 if (micMonitorGainNode) micMonitorGainNode.gain.value = 0;
+                if (micNode && micBroadcastGainNode) { try { micNode.disconnect(micBroadcastGainNode); } catch (_) {} }
                 if (micStream) micStream.getTracks().forEach(t => t.stop());
                 isMicOpen = false;
                 btn.className = "flex-grow bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-2xl transition flex items-center justify-center gap-2 text-sm shadow-lg shadow-red-600/30";
@@ -1050,7 +1115,7 @@
                 activeAudioSourceNode = null;
                 musicGainNode = null;
             }
-            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            ensureAudioGraph();
             activeAudioElement = new Audio(data);
             activeAudioElement.volume = 1;
             activeAudioElement.muted = false;
@@ -1059,6 +1124,7 @@
             musicGainNode.gain.value = document.getElementById('music-return-toggle').checked ? parseFloat(document.getElementById('volume-slider').value || 1) : 0;
             activeAudioSourceNode.connect(musicGainNode);
             musicGainNode.connect(audioContext.destination);
+            activeAudioSourceNode.connect(musicBroadcastGainNode);
             if (audioContext.state === 'suspended') audioContext.resume();
             activeAudioElement.play().then(() => {
                 isPlaying = true;
@@ -1104,24 +1170,15 @@
         }
 
         function togglePlay() {
-            if (!activeAudioElement) {
-                showToast('Adicione e selecione uma música no Deck do Locutor primeiro.');
+            if (!isHostAuthenticated) {
+                if (!liveStreamAudio || !liveStreamAudio.srcObject) { showToast('A transmissão ainda não está disponível. Aguarde o locutor entrar ao vivo.'); return; }
+                if (liveStreamAudio.paused) liveStreamAudio.play().then(()=>{isPlaying=true;updatePlayerUI();}).catch(()=>showToast('Toque novamente para liberar o áudio no navegador.'));
+                else { liveStreamAudio.pause();isPlaying=false;updatePlayerUI(); }
                 return;
             }
-
-            if (isPlaying) {
-                activeAudioElement.pause();
-                isPlaying = false;
-                showToast('Música pausada.');
-            } else {
-                if (audioContext && audioContext.state === 'suspended') audioContext.resume();
-                activeAudioElement.play().then(() => {
-                    isPlaying = true;
-                    updatePlayerUI();
-                }).catch(() => showToast('Não foi possível reproduzir a música.'));
-                return;
-            }
-
+            if (!activeAudioElement) { showToast('Adicione e selecione uma música no Deck do Locutor primeiro.'); return; }
+            if (isPlaying) { activeAudioElement.pause();isPlaying=false;showToast('Música pausada.'); }
+            else { if(audioContext&&audioContext.state==='suspended')audioContext.resume();activeAudioElement.play().then(()=>{isPlaying=true;updatePlayerUI();}).catch(()=>showToast('Não foi possível reproduzir a música.'));return; }
             updatePlayerUI();
         }
 
@@ -1130,7 +1187,6 @@
         }
 
         function setMusicMonitor(enabled) {
-            if (activeAudioElement) activeAudioElement.muted = false;
             if (musicGainNode) {
                 const slider = parseFloat(document.getElementById('volume-slider').value || 1);
                 musicGainNode.gain.value = enabled ? slider : 0;
@@ -1155,10 +1211,9 @@
             const song = document.getElementById('req-song').value;
             const msg = document.getElementById('req-msg').value;
 
-            const formatted = `Pedido de ${name} (${city}): ${song} - "${msg}"`;
-            appState.studioChat.push({ type: 'request', name: `🎵 Pedido Musical (${name})`, msg: `${song} (${city})${msg ? ' — ' + msg : ''}` });
-            persistState();
-            renderStudioChat();
+            const request = { name, city, song, msg };
+            if (radioSocket && radioSocket.connected) radioSocket.emit('request:send', request);
+            else { appState.studioChat.push({ type:'request',name:`🎵 Pedido Musical (${name})`,msg:`${song} (${city})${msg?' — '+msg:''}` });persistState();renderStudioChat(); }
 
             document.getElementById('req-name').value = '';
             document.getElementById('req-city').value = '';
@@ -1172,11 +1227,8 @@
             const name = document.getElementById('public-chat-name').value;
             const msg = document.getElementById('public-chat-msg').value;
 
-            appState.publicChat.push({ name, msg });
-            appState.studioChat.push({ type: 'chat', name, msg });
-            persistState();
-            renderPublicChat();
-            renderStudioChat();
+            if (radioSocket && radioSocket.connected) radioSocket.emit('chat:send', { name, msg });
+            else { appState.publicChat.push({name,msg});appState.studioChat.push({type:'chat',name,msg});persistState();renderPublicChat();renderStudioChat(); }
 
             document.getElementById('public-chat-msg').value = '';
         }
@@ -1219,6 +1271,8 @@
             `).join('') || `<p class="text-slate-500 italic py-4 text-center">${studioChatFilter === 'requests' ? 'Nenhum pedido de música recebido ainda.' : 'Nenhuma mensagem no chat ainda.'}</p>`;
             container.scrollTop = container.scrollHeight;
         }
+
+        connectRadioSocket();
 
         // --- 3-Dots Modals Management (Team, Schedule, Discord) ---
         function openTeamModal() {
