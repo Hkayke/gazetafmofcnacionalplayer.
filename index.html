@@ -44,7 +44,6 @@
                 <button onclick="scrollToSection('equipe')" class="hover:text-red-500 transition">Equipe</button>
                 <button onclick="scrollToSection('pedir-musica')" class="hover:text-red-500 transition">Pedir Música</button>
                 <button onclick="scrollToSection('ouvintes')" class="hover:text-red-500 transition">Ouvintes</button>
-                <button onclick="scrollToSection('contato')" class="hover:text-red-500 transition">Contato</button>
             </nav>
 
             <!-- Status & Login Button -->
@@ -79,7 +78,7 @@
                     <p class="text-slate-400 text-sm sm:text-base">Sua rádio em todo lugar! Música, informação e muita interação com você 24 horas por dia.</p>
                     
                     <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
-                        <button onclick="togglePlay()" id="hero-play-btn" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-3 transition shadow-lg shadow-red-600/40">
+                        <button onclick="togglePlay()" id="hero-play-btn" class="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-extrabold text-base flex items-center gap-3 transition shadow-xl shadow-red-600/40 hover:scale-[1.02] active:scale-[0.98]">
                             <i id="hero-play-icon" class="fa-solid fa-play text-lg"></i>
                             <span id="hero-play-text">Ouvir Rádio Ao Vivo</span>
                         </button>
@@ -110,12 +109,23 @@
             </div>
 
             <!-- Ticker / Now Playing -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4 overflow-hidden shadow-lg">
-                <div class="bg-red-600 text-white px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap flex items-center gap-2">
-                    <i class="fa-solid fa-music">></i> Tocando Agora
+            <div class="relative bg-gradient-to-r from-slate-900 via-slate-900 to-red-950/70 border border-red-900/40 rounded-2xl p-5 flex items-center gap-4 overflow-hidden shadow-xl">
+                <div class="absolute inset-y-0 left-0 w-1 bg-red-600"></div>
+                <div class="w-12 h-12 rounded-xl bg-red-600/15 border border-red-600/30 text-red-400 flex items-center justify-center text-xl flex-shrink-0">
+                    <i class="fa-solid fa-compact-disc"></i>
                 </div>
-                <div class="overflow-hidden whitespace-nowrap w-full">
-                    <p id="now-playing-marquee" class="text-sm text-slate-300 font-medium animate-marquee">Tocando as melhores da Gazeta FM — Conectado com você em todo o Brasil!</p>
+                <div class="min-w-0 flex-grow">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-[10px] text-red-400 font-extrabold uppercase tracking-[0.2em]">Tocando agora</span>
+                        <span class="flex items-center gap-1.5 text-[10px] text-slate-500 uppercase tracking-wider"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Gazeta FM</span>
+                    </div>
+                    <p id="now-playing-marquee" class="text-sm sm:text-base text-white font-bold truncate">Tocando as melhores da Gazeta FM — Conectado com você em todo o Brasil!</p>
+                </div>
+                <div class="hidden sm:flex items-end gap-1 h-7 flex-shrink-0" aria-hidden="true">
+                    <span class="w-1 h-3 bg-red-500 rounded-full animate-pulse"></span>
+                    <span class="w-1 h-6 bg-red-500/80 rounded-full animate-pulse"></span>
+                    <span class="w-1 h-4 bg-red-500/60 rounded-full animate-pulse"></span>
+                    <span class="w-1 h-5 bg-red-500/80 rounded-full animate-pulse"></span>
                 </div>
             </div>
 
@@ -277,25 +287,6 @@
                         </form>
                     </section>
 
-                    <!-- Contato / Info -->
-                    <section id="contato" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                        <h4 class="font-bold text-white text-base">Informações da Rádio</h4>
-                        <div class="space-y-3 text-xs text-slate-300">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-location-dot text-red-500 w-5"></i>
-                                <span>São Paulo - SP, Brasil</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-envelope text-red-500 w-5"></i>
-                                <span>contato@gazetafmnacional.com.br</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-globe text-red-500 w-5"></i>
-                                <span>www.gazetafmnacionalplayer.com.br</span>
-                            </div>
-                        </div>
-                    </section>
-
                 </div>
 
             </div>
@@ -455,6 +446,23 @@
                             </button>
                         </div>
 
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input id="voice-return-toggle" type="checkbox" onchange="setVoiceMonitor(this.checked)" class="mt-1 accent-red-600 w-4 h-4">
+                                <span>
+                                    <span class="block text-sm font-bold text-white">Retorno da minha voz</span>
+                                    <span class="block text-[11px] text-slate-400 mt-1">Ouvir o próprio microfone (use fones para evitar eco).</span>
+                                </span>
+                            </label>
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input id="music-return-toggle" type="checkbox" onchange="setMusicMonitor(this.checked)" class="mt-1 accent-red-600 w-4 h-4">
+                                <span>
+                                    <span class="block text-sm font-bold text-white">Retorno da música</span>
+                                    <span class="block text-[11px] text-slate-400 mt-1">Ative para ouvir a música no seu dispositivo.</span>
+                                </span>
+                            </label>
+                        </div>
+
                         <!-- VU Meters -->
                         <div class="space-y-2 bg-slate-950 p-4 rounded-2xl border border-slate-800">
                             <div class="flex justify-between text-[11px] text-slate-400 font-semibold">
@@ -526,12 +534,16 @@
                     </div>
 
                     <!-- Studio Live Chat -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4 flex flex-col h-[280px]">
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4 flex flex-col h-[320px]">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                             <h3 class="font-bold text-white text-sm flex items-center gap-2">
-                                <i class="fa-solid fa-comments text-red-500"></i> Chat dos Ouvintes (Tempo Real)
+                                <i class="fa-solid fa-comments text-red-500"></i> Mensagens dos Ouvintes
                             </h3>
                             <span class="text-[11px] text-slate-400">Leitura do Locutor</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="studio-chat-tab" onclick="setStudioChatFilter('chat')" class="flex-1 bg-red-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition">Chat dos ouvintes</button>
+                            <button id="studio-requests-tab" onclick="setStudioChatFilter('requests')" class="flex-1 bg-slate-800 text-slate-300 hover:bg-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition">Pedidos de música</button>
                         </div>
                         <div id="studio-chat-messages" class="flex-grow overflow-y-auto space-y-2 pr-2 text-xs">
                             <!-- Rendered by JS -->
@@ -637,20 +649,20 @@
                     <h4 id="sticky-song-title" class="text-sm font-bold text-white truncate max-w-[200px] sm:max-w-xs">Gazeta FM Nacional Player</h4>
                     <p id="sticky-locutor-name" class="text-xs text-slate-400">Ao Vivo 24 Horas</p>
                 </div>
-                <button onclick="togglePlay()" class="sm:hidden w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg">
-                    <i id="sticky-play-icon-mobile" class="fa-solid fa-play"></i>
+                <button onclick="togglePlay()" class="sm:hidden w-12 h-12 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-xl shadow-red-600/30 transition active:scale-95">
+                    <i id="sticky-play-icon-mobile" class="fa-solid fa-play text-lg"></i>
                 </button>
             </div>
 
             <div class="flex items-center gap-4">
-                <button onclick="togglePlay()" class="hidden sm:flex w-12 h-12 rounded-full bg-red-600 hover:bg-red-700 text-white items-center justify-center shadow-lg shadow-red-600/30 transition transform hover:scale-105">
-                    <i id="sticky-play-icon" class="fa-solid fa-play text-lg"></i>
+                <button onclick="togglePlay()" class="hidden sm:flex w-14 h-14 rounded-full bg-red-600 hover:bg-red-700 text-white items-center justify-center shadow-xl shadow-red-600/40 transition transform hover:scale-105 active:scale-95">
+                    <i id="sticky-play-icon" class="fa-solid fa-play text-xl"></i>
                 </button>
             </div>
 
             <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-                <i class="fa-solid fa-volume-high text-slate-400 text-sm"></i>
-                <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.8" oninput="changeVolume(this.value)" class="w-24 sm:w-32 accent-red-600 cursor-pointer">
+                <i class="fa-solid fa-volume-high text-red-400 text-base"></i>
+                <input type="range" id="volume-slider" min="0" max="1.5" step="0.05" value="1" oninput="changeVolume(this.value)" aria-label="Volume da música" class="w-32 sm:w-44 accent-red-600 cursor-pointer">
             </div>
 
         </div>
@@ -873,7 +885,12 @@
         let analyserNode = null;
         let isMicOpen = false;
         let masterGainNode = null;
+        let micMonitorGainNode = null;
+        let musicGainNode = null;
+        let activeAudioSourceNode = null;
         let activeAudioElement = null;
+        let isPlaying = false;
+        let studioChatFilter = 'chat';
 
         async function toggleMicrophone() {
             const btn = document.getElementById('mic-toggle-btn');
@@ -888,6 +905,10 @@
                     micNode = audioContext.createMediaStreamSource(micStream);
                     analyserNode = audioContext.createAnalyser();
                     micNode.connect(analyserNode);
+                    micMonitorGainNode = audioContext.createGain();
+                    micMonitorGainNode.gain.value = document.getElementById('voice-return-toggle').checked ? 0.65 : 0;
+                    micNode.connect(micMonitorGainNode);
+                    micMonitorGainNode.connect(audioContext.destination);
 
                     isMicOpen = true;
                     btn.className = "flex-grow bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-2xl transition flex items-center justify-center gap-2 text-sm shadow-lg shadow-emerald-600/30";
@@ -901,6 +922,7 @@
                     alert('Erro ao acessar microfone. Verifique as permissões do navegador.');
                 }
             } else {
+                if (micMonitorGainNode) micMonitorGainNode.gain.value = 0;
                 if (micStream) micStream.getTracks().forEach(t => t.stop());
                 isMicOpen = false;
                 btn.className = "flex-grow bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-2xl transition flex items-center justify-center gap-2 text-sm shadow-lg shadow-red-600/30";
@@ -1022,11 +1044,26 @@
         function playPlaylistTrack(data, name) {
             if (activeAudioElement) {
                 activeAudioElement.pause();
+                if (activeAudioSourceNode) activeAudioSourceNode.disconnect();
+                if (musicGainNode) musicGainNode.disconnect();
                 activeAudioElement = null;
+                activeAudioSourceNode = null;
+                musicGainNode = null;
             }
+            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
             activeAudioElement = new Audio(data);
-            activeAudioElement.volume = parseFloat(document.getElementById('volume-slider').value || 0.8);
-            activeAudioElement.play();
+            activeAudioElement.volume = 1;
+            activeAudioElement.muted = false;
+            activeAudioSourceNode = audioContext.createMediaElementSource(activeAudioElement);
+            musicGainNode = audioContext.createGain();
+            musicGainNode.gain.value = document.getElementById('music-return-toggle').checked ? parseFloat(document.getElementById('volume-slider').value || 1) : 0;
+            activeAudioSourceNode.connect(musicGainNode);
+            musicGainNode.connect(audioContext.destination);
+            if (audioContext.state === 'suspended') audioContext.resume();
+            activeAudioElement.play().then(() => {
+                isPlaying = true;
+                updatePlayerUI();
+            }).catch(() => showToast('Não foi possível reproduzir a música selecionada.'));
 
             document.getElementById('sticky-song-title').innerText = name;
             document.getElementById('now-playing-marquee').innerText = `Tocando agora: ${name}`;
@@ -1036,44 +1073,78 @@
         function removePlaylistTrack(idx) {
             if (activeAudioElement) {
                 activeAudioElement.pause();
+                if (activeAudioSourceNode) activeAudioSourceNode.disconnect();
+                if (musicGainNode) musicGainNode.disconnect();
                 activeAudioElement = null;
+                activeAudioSourceNode = null;
+                musicGainNode = null;
             }
+            isPlaying = false;
+            updatePlayerUI();
             appState.playlist.splice(idx, 1);
             persistState();
             renderPlaylist();
             document.getElementById('sticky-song-title').innerText = "Gazeta FM Nacional Player";
+            document.getElementById('now-playing-marquee').innerText = "Selecione uma música no Deck do Locutor";
             showToast('Música removida e parada com sucesso!');
         }
 
-        let isPlaying = false;
-        function togglePlay() {
-            isPlaying = !isPlaying;
+        function updatePlayerUI() {
             const icon1 = document.getElementById('hero-play-icon');
             const icon2 = document.getElementById('sticky-play-icon');
             const icon3 = document.getElementById('sticky-play-icon-mobile');
             const text = document.getElementById('hero-play-text');
             const vinyl = document.getElementById('vinyl-disc');
 
+            if (icon1) icon1.className = isPlaying ? "fa-solid fa-pause text-lg" : "fa-solid fa-play text-lg";
+            if (icon2) icon2.className = isPlaying ? "fa-solid fa-pause text-xl" : "fa-solid fa-play text-xl";
+            if (icon3) icon3.className = isPlaying ? "fa-solid fa-pause text-lg" : "fa-solid fa-play text-lg";
+            if (text) text.innerText = isPlaying ? "Pausar Música" : "Ouvir Música";
+            if (vinyl) vinyl.classList.toggle('vinyl-spin', isPlaying);
+        }
+
+        function togglePlay() {
+            if (!activeAudioElement) {
+                showToast('Adicione e selecione uma música no Deck do Locutor primeiro.');
+                return;
+            }
+
             if (isPlaying) {
-                if (icon1) icon1.className = "fa-solid fa-pause text-lg";
-                if (icon2) icon2.className = "fa-solid fa-pause text-lg";
-                if (icon3) icon3.className = "fa-solid fa-pause";
-                if (text) text.innerText = "Pausar Rádio";
-                if (vinyl) vinyl.classList.add('vinyl-spin');
-                showToast('Reproduzindo rádio ao vivo...');
+                activeAudioElement.pause();
+                isPlaying = false;
+                showToast('Música pausada.');
             } else {
-                if (icon1) icon1.className = "fa-solid fa-play text-lg";
-                if (icon2) icon2.className = "fa-solid fa-play text-lg";
-                if (icon3) icon3.className = "fa-solid fa-play";
-                if (text) text.innerText = "Ouvir Rádio Ao Vivo";
-                if (vinyl) vinyl.classList.remove('vinyl-spin');
-                if (activeAudioElement) activeAudioElement.pause();
-                showToast('Player pausado.');
+                if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+                activeAudioElement.play().then(() => {
+                    isPlaying = true;
+                    updatePlayerUI();
+                }).catch(() => showToast('Não foi possível reproduzir a música.'));
+                return;
+            }
+
+            updatePlayerUI();
+        }
+
+        function setVoiceMonitor(enabled) {
+            if (micMonitorGainNode) micMonitorGainNode.gain.value = enabled && isMicOpen ? 0.65 : 0;
+        }
+
+        function setMusicMonitor(enabled) {
+            if (activeAudioElement) activeAudioElement.muted = false;
+            if (musicGainNode) {
+                const slider = parseFloat(document.getElementById('volume-slider').value || 1);
+                musicGainNode.gain.value = enabled ? slider : 0;
+            } else if (activeAudioElement) {
+                activeAudioElement.muted = !enabled;
             }
         }
 
         function changeVolume(val) {
-            if (activeAudioElement) activeAudioElement.volume = parseFloat(val);
+            if (musicGainNode) {
+                musicGainNode.gain.value = document.getElementById('music-return-toggle').checked ? parseFloat(val) : 0;
+            } else if (activeAudioElement) {
+                activeAudioElement.volume = Math.min(1, parseFloat(val));
+            }
         }
 
         // --- Chat & Song Requests ---
@@ -1085,7 +1156,7 @@
             const msg = document.getElementById('req-msg').value;
 
             const formatted = `Pedido de ${name} (${city}): ${song} - "${msg}"`;
-            appState.studioChat.push({ name: `🎵 Pedido Musical (${name})`, msg: `${song} (${city})` });
+            appState.studioChat.push({ type: 'request', name: `🎵 Pedido Musical (${name})`, msg: `${song} (${city})${msg ? ' — ' + msg : ''}` });
             persistState();
             renderStudioChat();
 
@@ -1102,7 +1173,7 @@
             const msg = document.getElementById('public-chat-msg').value;
 
             appState.publicChat.push({ name, msg });
-            appState.studioChat.push({ name, msg });
+            appState.studioChat.push({ type: 'chat', name, msg });
             persistState();
             renderPublicChat();
             renderStudioChat();
@@ -1121,14 +1192,31 @@
             container.scrollTop = container.scrollHeight;
         }
 
+        function setStudioChatFilter(filter) {
+            studioChatFilter = filter;
+            const chatTab = document.getElementById('studio-chat-tab');
+            const requestsTab = document.getElementById('studio-requests-tab');
+            chatTab.className = filter === 'chat'
+                ? 'flex-1 bg-red-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition'
+                : 'flex-1 bg-slate-800 text-slate-300 hover:bg-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition';
+            requestsTab.className = filter === 'requests'
+                ? 'flex-1 bg-red-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition'
+                : 'flex-1 bg-slate-800 text-slate-300 hover:bg-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition';
+            renderStudioChat();
+        }
+
         function renderStudioChat() {
             const container = document.getElementById('studio-chat-messages');
-            container.innerHTML = appState.studioChat.map(c => `
+            const filteredMessages = appState.studioChat.filter(c => {
+                const isRequest = c.type === 'request' || String(c.name).includes('Pedido Musical');
+                return studioChatFilter === 'requests' ? isRequest : !isRequest;
+            });
+            container.innerHTML = filteredMessages.map(c => `
                 <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
                     <span class="font-bold text-red-500">${c.name}:</span>
                     <span class="text-slate-300 ml-1">${c.msg}</span>
                 </div>
-            `).join('');
+            `).join('') || `<p class="text-slate-500 italic py-4 text-center">${studioChatFilter === 'requests' ? 'Nenhum pedido de música recebido ainda.' : 'Nenhuma mensagem no chat ainda.'}</p>`;
             container.scrollTop = container.scrollHeight;
         }
 
