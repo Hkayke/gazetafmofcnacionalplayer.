@@ -1,937 +1,935 @@
+```html
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAZETA FM NACIONAL PLAYER - Painel do Locutor</title>
-    <!-- Font Awesome Icons -->
+    <title>GAZETA FM NACIONAL PLAYER - A sua rádio, em todo lugar!</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#e50914',
+                            redHover: '#b80710',
+                            dark: '#0a0a0c',
+                            card: '#121218',
+                            cardBorder: '#232330',
+                            accent: '#ff1e27'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-dark: #07090e;
-            --bg-sidebar: #0b0e14;
-            --bg-card: #121722;
-            --bg-card-hover: #1a2233;
-            --primary-red: #e50914;
-            --primary-red-hover: #ff1e27;
-            --btn-green: #00c853;
-            --text-main: #ffffff;
-            --text-muted: #8c95a5;
-            --border-color: #1e2638;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Montserrat', sans-serif;
-        }
-
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0c;
+            color: #ffffff;
             overflow-x: hidden;
         }
 
-        /* SITE PÚBLICO (HOME DO OUVINTE) */
-        #public-view {
-            display: block;
-            min-height: 100vh;
+        /* Ambient Glow & Studio Background Effects */
+        .bg-studio {
+            background: linear-gradient(135deg, rgba(10,10,12,0.92) 0%, rgba(20,5,8,0.95) 100%),
+                        url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
         }
 
-        .public-hero {
-            background: linear-gradient(rgba(7,9,14,0.9), rgba(7,9,14,0.95)), url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=1600&auto=format&fit=crop') center/cover;
-            padding: 80px 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .red-glow {
+            box-shadow: 0 0 25px rgba(229, 9, 20, 0.35);
         }
 
-        /* PAINEL DO LOCUTOR (ESTÚDIO) */
-        #studio-view {
-            display: none;
+        .red-glow-lg {
+            box-shadow: 0 0 45px rgba(229, 9, 20, 0.55);
+        }
+
+        .text-glow {
+            text-shadow: 0 0 12px rgba(229, 9, 20, 0.6);
+        }
+
+        /* Equalizer Animation */
+        .eq-bar {
+            animation: bounce 1.2s ease-in-out infinite alternate;
+        }
+        .eq-bar:nth-child(2) { animation-delay: 0.2s; }
+        .eq-bar:nth-child(3) { animation-delay: 0.4s; }
+        .eq-bar:nth-child(4) { animation-delay: 0.1s; }
+        .eq-bar:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes bounce {
+            0% { height: 15%; }
+            100% { height: 100%; }
+        }
+
+        /* Ticker Marquee */
+        .ticker-wrap {
             width: 100%;
-            min-height: 100vh;
-            background-color: var(--bg-dark);
-        }
-
-        #studio-view.active {
-            display: grid;
-            grid-template-columns: 240px 1fr;
-            grid-template-rows: 65px 1fr 40px;
-            grid-template-areas:
-                "sidebar header"
-                "sidebar main"
-                "sidebar footer";
-        }
-
-        /* HEADER DO PAINEL */
-        .studio-header {
-            grid-area: header;
-            background-color: var(--bg-sidebar);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 25px;
-        }
-
-        .header-logo-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo-icon-red {
-            background-color: var(--primary-red);
-            color: white;
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: 900;
-            font-size: 18px;
-            box-shadow: 0 0 12px rgba(229,9,20,0.5);
-        }
-
-        .header-logo-text h1 {
-            font-size: 16px;
-            font-weight: 900;
-            letter-spacing: -0.5px;
-            line-height: 1;
-        }
-        .header-logo-text h1 span { color: var(--primary-red); }
-        .header-logo-text p { font-size: 9px; color: var(--text-muted); font-weight: 700; letter-spacing: 1.5px; }
-
-        .header-status-group {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-            font-size: 13px;
-        }
-
-        .live-pill {
-            background: rgba(229,9,20,0.15);
-            border: 1px solid var(--primary-red);
-            color: var(--primary-red);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            animation: pulseLive 2s infinite;
-        }
-
-        @keyframes pulseLive {
-            0% { box-shadow: 0 0 0 0 rgba(229,9,20,0.4); }
-            70% { box-shadow: 0 0 0 8px rgba(229,9,20,0); }
-            100% { box-shadow: 0 0 0 0 rgba(229,9,20,0); }
-        }
-
-        .live-dot { width: 8px; height: 8px; background-color: var(--primary-red); border-radius: 50%; }
-
-        .btn-exit-panel {
-            background-color: var(--primary-red);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: 0.3s;
-        }
-        .btn-exit-panel:hover { background-color: var(--primary-red-hover); }
-
-        /* SIDEBAR DO PAINEL */
-        .studio-sidebar {
-            grid-area: sidebar;
-            background-color: var(--bg-sidebar);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 20px 15px;
-        }
-
-        .sidebar-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            list-style: none;
-        }
-
-        .sidebar-item a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 15px;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 13px;
-            border-radius: 8px;
-            transition: 0.3s;
-            cursor: pointer;
-        }
-
-        .sidebar-item.active a, .sidebar-item a:hover {
-            background-color: var(--primary-red);
-            color: white;
-        }
-
-        .sidebar-banner-radio {
-            background: linear-gradient(135deg, #151a28, #0b0e14);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 15px 10px;
-            text-align: center;
-        }
-
-        /* CONTEÚDO PRINCIPAL DO PAINEL */
-        .studio-main {
-            grid-area: main;
-            padding: 20px;
-            overflow-y: auto;
-            display: grid;
-            grid-template-columns: 1fr 340px;
-            gap: 20px;
-        }
-
-        .dashboard-col-left {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .dashboard-col-right {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* CARD DE TRANSMISSÃO TOPO */
-        .on-air-banner {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-        }
-
-        .on-air-status-box {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            min-width: 220px;
-        }
-
-        .on-air-tag {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 800;
-            font-size: 15px;
-            color: var(--text-main);
-        }
-
-        .btn-stop-broadcast {
-            background-color: var(--primary-red);
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: 0.3s;
-        }
-        .btn-stop-broadcast:hover { background-color: var(--primary-red-hover); }
-
-        .current-track-info-box {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-grow: 1;
-        }
-
-        .current-track-img {
-            width: 65px;
-            height: 65px;
-            border-radius: 8px;
-            object-fit: cover;
-        }
-
-        .current-track-details h4 { font-size: 15px; font-weight: 800; margin-bottom: 3px; }
-        .current-track-details p { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
-
-        .track-progress-bar {
-            width: 100%;
-            height: 4px;
-            background-color: #232b3d;
-            border-radius: 2px;
-            position: relative;
-        }
-        .track-progress-fill { width: 75%; height: 100%; background-color: var(--primary-red); border-radius: 2px; }
-        .track-time-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-top: 4px; }
-
-        .vu-meter-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            background: #090b10;
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        /* PLAYLIST DA RÁDIO */
-        .playlist-panel {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        .playlist-header-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .btn-add-music {
-            background-color: var(--primary-red);
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-weight: 700;
-            font-size: 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .playlist-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .playlist-table th {
-            text-align: left;
-            font-size: 11px;
-            color: var(--text-muted);
-            padding: 8px 10px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .playlist-table td {
-            padding: 10px;
-            font-size: 13px;
-            border-bottom: 1px solid rgba(30,38,56,0.5);
-            vertical-align: middle;
-        }
-
-        .playlist-table tr:hover { background-color: var(--bg-card-hover); }
-
-        .song-mini-thumb { width: 32px; height: 32px; border-radius: 4px; object-fit: cover; vertical-align: middle; margin-right: 10px; }
-
-        /* VINHETAS / EFEITOS (10 PADS) */
-        .effects-panel {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        .effects-grid-10 {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .effect-pad-card {
-            background-color: #171f30;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .effect-pad-card:hover { border-color: var(--primary-red); background-color: #1f2a42; }
-        .effect-pad-card i { font-size: 18px; color: var(--text-main); margin-bottom: 6px; }
-        .effect-pad-card h5 { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
-        .effect-pad-card span { font-size: 10px; color: var(--text-muted); }
-
-        /* CONTROLES RÁPIDOS */
-        .quick-controls-panel {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        .quick-buttons-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-top: 15px;
-        }
-
-        .btn-qc-green {
-            background-color: var(--btn-green);
-            color: #07090e;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-weight: 800;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-qc-red {
-            background-color: var(--primary-red);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-weight: 800;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-qc-dark {
-            background-color: #1a2233;
-            color: white;
-            border: 1px solid var(--border-color);
-            padding: 14px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        /* COLUNA DIREITA (OUVINTES & CHAT) */
-        .right-sidebar-box {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 15px;
-        }
-
-        .listeners-list-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(30,38,56,0.3);
-            font-size: 12px;
-        }
-
-        .chat-messages-container {
-            max-height: 250px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 10px;
-            margin-bottom: 12px;
-        }
-
-        .chat-msg-item {
-            font-size: 12px;
-        }
-
-        .chat-input-box {
-            display: flex;
-            gap: 8px;
-        }
-
-        .chat-input-box input {
-            flex-grow: 1;
-            background-color: #0a0c10;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 8px 10px;
-            color: white;
-            font-size: 12px;
-            outline: none;
-        }
-
-        .chat-send-btn {
-            background-color: var(--primary-red);
-            border: none;
-            color: white;
-            width: 34px;
-            height: 34px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* ÚLTIMAS MÚSICAS TOCADAS RODAPÉ DA COLUNA */
-        .last-played-carousel {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-top: 12px;
-        }
-
-        .last-played-mini {
-            background: #171f30;
-            border-radius: 8px;
             overflow: hidden;
-            border: 1px solid var(--border-color);
-            text-align: center;
-            padding-bottom: 6px;
+            white-space: nowrap;
+        }
+        .ticker-move {
+            display: inline-block;
+            white-space: nowrap;
+            padding-left: 100%;
+            animation: ticker 35s linear infinite;
+        }
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
         }
 
-        .last-played-mini img { width: 100%; height: 50px; object-fit: cover; }
-        .last-played-mini h6 { font-size: 10px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
-        .last-played-mini p { font-size: 9px; color: var(--text-muted); }
-
-        /* RODAPÉ DO PAINEL */
-        .studio-footer-bar {
-            grid-area: footer;
-            background-color: var(--bg-sidebar);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 25px;
-            font-size: 11px;
-            color: var(--text-muted);
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
-
-        /* MODAIS */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(8px);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 2000;
-            opacity: 0; visibility: hidden; transition: 0.3s;
+        ::-webkit-scrollbar-track {
+            background: #0a0a0c;
         }
-        .modal-overlay.active { opacity: 1; visibility: visible; }
-        .login-box {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            width: 100%; max-width: 380px;
-            padding: 35px 25px; text-align: center;
+        ::-webkit-scrollbar-thumb {
+            background: #282835;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #e50914;
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col justify-between selection:bg-brand-red selection:text-white">
 
-    <!-- 1. TELA PÚBLICA (HOME DO OUVINTE) -->
-    <div id="public-view">
-        <header style="background: rgba(7,9,14,0.95); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="logo-icon-red">G</div>
+    <!-- APP HEADER -->
+    <header class="sticky top-0 z-40 bg-[#0a0a0c]/90 backdrop-blur-md border-b border-brand-cardBorder px-4 lg:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('inicio')">
+                <div class="w-10 h-10 rounded-full bg-brand-red flex items-center justify-center shadow-lg shadow-brand-red/40">
+                    <i class="fa-solid font-black fa-microphone-lines text-white text-xl"></i>
+                </div>
                 <div>
-                    <h1 style="font-size: 18px; font-weight: 900;">GAZETA <span style="color:var(--primary-red);">FM</span></h1>
-                    <p style="font-size: 10px; color: var(--text-muted); letter-spacing: 2px; font-weight: 700;">NACIONAL PLAYER</p>
-                </div>
-            </div>
-            <button onclick="openModal('login-modal')" style="background-color: var(--primary-red); color: white; border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; font-size: 13px; cursor: pointer;">
-                <i class="fa-solid fa-lock"></i> Painel do Locutor
-            </button>
-        </header>
-
-        <section class="public-hero">
-            <div style="max-width: 600px;">
-                <h2 style="font-size: 42px; font-weight: 900; margin-bottom: 15px;">A sua rádio, <span style="color:var(--primary-red);">em todo lugar!</span></h2>
-                <p style="color: var(--text-muted); font-size: 16px; margin-bottom: 30px;">Música, Informação e muita Interação!</p>
-                <div style="background: #121722; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 20px;">
-                    <button onclick="alert('Tocando rádio ao vivo!')" style="width: 55px; height: 55px; background: var(--primary-red); border-radius: 50%; border: none; color: white; font-size: 20px; cursor: pointer;">
-                        <i class="fa-solid fa-play"></i>
-                    </button>
-                    <div>
-                        <div style="color: var(--primary-red); font-size: 11px; font-weight: 700;">AO VIVO NA GAZETA FM</div>
-                        <div style="font-size: 16px; font-weight: 700; margin-top: 2px;">Sertanejo Top 2026</div>
+                    <div class="flex items-center space-x-1.5">
+                        <span class="font-black text-2xl tracking-wider text-white">GAZETA</span>
+                        <span class="font-extrabold text-2xl text-brand-red">FM</span>
                     </div>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <!-- 2. PAINEL DO LOCUTOR (ESTÚDIO COMPLETO EXATAMENTE IGUAL AO MODELO) -->
-    <div id="studio-view">
-        <!-- HEADER DO PAINEL -->
-        <header class="studio-header">
-            <div class="header-logo-area">
-                <div class="logo-icon-red">G</div>
-                <div class="header-logo-text">
-                    <h1>GAZETA <span>FM</span></h1>
-                    <p>NACIONAL PLAYER</p>
+                    <p class="text-[10px] tracking-widest text-gray-400 -mt-1 uppercase font-semibold">NACIONAL PLAYER</p>
                 </div>
             </div>
 
-            <div class="header-status-group">
-                <div class="live-pill">
-                    <div class="live-dot"></div> Ao Vivo
+            <!-- Navigation Bar -->
+            <nav class="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-300">
+                <button onclick="switchTab('inicio')" class="nav-btn hover:text-brand-red transition active-nav font-bold text-white" data-target="inicio">Início</button>
+                <button onclick="switchTab('programacao')" class="nav-btn hover:text-brand-red transition" data-target="programacao">Programação</button>
+                <button onclick="switchTab('equipe')" class="nav-btn hover:text-brand-red transition" data-target="equipe">Equipe</button>
+                <button onclick="openRequestModal()" class="hover:text-brand-red transition">Pedir Música</button>
+                <button onclick="switchTab('chat')" class="nav-btn hover:text-brand-red transition" data-target="chat">Chat Ouvintes</button>
+                <button onclick="openLocutorLoginModal()" class="hover:text-brand-red transition flex items-center gap-1.5 bg-brand-card px-3 py-1.5 rounded-lg border border-brand-cardBorder">
+                    <i class="fa-solid fa-lock text-brand-red text-xs"></i> Studio / Login
+                </button>
+            </nav>
+
+            <!-- Live Status & Mobile Toggle -->
+            <div class="flex items-center space-x-3">
+                <div class="bg-brand-red/10 border border-brand-red/40 text-brand-red px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-2 animate-pulse">
+                    <span class="w-2 h-2 rounded-full bg-brand-red"></span>
+                    <span>AO VIVO</span>
                 </div>
-                <div><i class="fa-solid fa-user" style="color: var(--primary-red); margin-right: 6px;"></i> Locutor: <b>João Silva</b></div>
-                <div><i class="fa-solid fa-clock" style="color: var(--primary-red); margin-right: 6px;"></i> Horário: <span id="live-clock">14:32</span></div>
-                <i class="fa-regular fa-bell" style="cursor: pointer; font-size: 16px;"></i>
-                <button class="btn-exit-panel" onclick="exitStudioPanel()">
-                    <i class="fa-solid fa-right-from-bracket"></i> Sair do Painel
+
+                <button onclick="toggleMobileMenu()" class="md:hidden text-gray-300 text-xl focus:outline-none p-1">
+                    <i class="fa-solid fa-bars"></i>
                 </button>
             </div>
-        </header>
+        </div>
 
-        <!-- SIDEBAR DO PAINEL -->
-        <aside class="studio-sidebar">
-            <ul class="sidebar-menu">
-                <li class="sidebar-item active"><a href="#"><i class="fa-solid fa-house"></i> Painel Inicial</a></li>
-                <li class="sidebar-item"><a href="#"><i class="fa-solid fa-music"></i> Músicas</a></li>
-                <li class="sidebar-item"><a href="#"><i class="fa-solid fa-bolt"></i> Vinhetas / Efeitos</a></li>
-                <li class="sidebar-item"><a href="#"><i class="fa-solid fa-users"></i> Ouvintes</a></li>
-                <li class="sidebar-item"><a href="#"><i class="fa-solid fa-microphone"></i> Pedir Música</a></li>
-                <li class="sidebar-item"><a href="#"><i class="fa-solid fa-comments"></i> Chat</a></li>
-                <li class="sidebar-item"><a href="#"><i class="fa-solid fa-calendar-days"></i> Programação</a></li>
-                <li class="sidebar-item"><a href="#"><i class="fa-solid fa-chart-line"></i> Relatórios</a></li>
-                <li class="sidebar-item"><a href="#"><i class="fa-solid fa-gear"></i> Configurações</a></li>
-            </ul>
+        <!-- Mobile Menu Drawer -->
+        <div id="mobileMenu" class="hidden md:hidden mt-3 pt-3 border-t border-brand-cardBorder flex flex-col space-y-3 text-sm text-gray-200">
+            <button onclick="switchTab('inicio'); toggleMobileMenu()" class="text-left py-1 hover:text-brand-red">Início</button>
+            <button onclick="switchTab('programacao'); toggleMobileMenu()" class="text-left py-1 hover:text-brand-red">Programação</button>
+            <button onclick="switchTab('equipe'); toggleMobileMenu()" class="text-left py-1 hover:text-brand-red">Equipe</button>
+            <button onclick="openRequestModal(); toggleMobileMenu()" class="text-left py-1 hover:text-brand-red">Pedir Música</button>
+            <button onclick="switchTab('chat'); toggleMobileMenu()" class="text-left py-1 hover:text-brand-red">Chat dos Ouvintes</button>
+            <button onclick="openLocutorLoginModal(); toggleMobileMenu()" class="text-left py-1 text-brand-red font-semibold">Painel do Locutor</button>
+        </div>
+    </header>
 
-            <div class="sidebar-banner-radio">
-                <div class="logo-icon-red" style="margin: 0 auto 8px auto; width: 30px; height: 30px; font-size: 14px;">G</div>
-                <p style="font-size: 11px; font-weight: 700;">Aqui a sua rádio, em todo lugar!</p>
-                <div style="color: var(--primary-red); font-size: 10px; margin-top: 5px;"><i class="fa-solid fa-wave-square"></i></div>
-            </div>
-        </aside>
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow">
 
-        <!-- MAIN CONTEÚDO DO ESTÚDIO -->
-        <main class="studio-main">
-            <!-- COLUNA ESQUERDA -->
-            <div class="dashboard-col-left">
-                <!-- CARD TOPO: TRANSMISSÃO -->
-                <div class="on-air-banner">
-                    <div class="on-air-status-box">
-                        <div class="on-air-tag">
-                            <i class="fa-solid fa-microphone" style="color: var(--primary-red);"></i> No Ar <span style="background:var(--primary-red); font-size:9px; padding:2px 6px; border-radius:4px;">AO VIVO</span>
+        <!-- TAB 1: INÍCIO (PAINEL DO OUVINTE - CONFORME MODELO SOLICITADO) -->
+        <div id="tab-inicio" class="tab-content block">
+            
+            <!-- HERO SECTION BANNER -->
+            <section class="relative bg-studio border-b border-brand-cardBorder py-12 md:py-16 px-4 lg:px-8">
+                <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    
+                    <!-- Left Column: Title & Player -->
+                    <div class="lg:col-span-8 space-y-6">
+                        <!-- Main Title Branding -->
+                        <div class="space-y-2">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 rounded-2xl bg-brand-red flex items-center justify-center red-glow">
+                                    <i class="fa-solid fa-microphone-lines text-2xl text-white"></i>
+                                </div>
+                                <h1 class="text-3xl sm:text-5xl font-black tracking-tight uppercase">
+                                    GAZETA<span class="text-brand-red">FM</span>
+                                    <span class="block text-xl sm:text-2xl font-bold tracking-widest text-gray-300">NACIONAL PLAYER</span>
+                                </h1>
+                            </div>
+                            <p class="text-gray-300 font-medium text-lg sm:text-xl">A sua rádio, em todo lugar!</p>
                         </div>
-                        <p style="font-size: 11px; color: var(--text-muted);">Sua transmissão está ativa!</p>
-                        <button class="btn-stop-broadcast" onclick="alert('Transmissão pausada!')">
-                            <i class="fa-solid fa-stop"></i> Finalizar Transmissão
-                        </button>
+
+                        <!-- LIVE PLAYER CARD CONTAINER -->
+                        <div class="bg-brand-card/90 backdrop-blur-xl border border-brand-cardBorder rounded-2xl p-5 md:p-6 red-glow">
+                            <div class="flex flex-col md:flex-row items-center gap-5">
+                                
+                                <!-- Play/Pause Big Button -->
+                                <button id="mainPlayBtn" onclick="togglePlayRadio()" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-brand-red hover:bg-brand-redHover text-white flex items-center justify-center text-3xl sm:text-4xl transition-all duration-300 transform active:scale-95 red-glow-lg flex-shrink-0">
+                                    <i id="playIcon" class="fa-solid fa-play ml-1"></i>
+                                </button>
+
+                                <!-- Track Info & Visualizer -->
+                                <div class="flex-grow text-center md:text-left space-y-2 w-full">
+                                    <div class="flex items-center justify-center md:justify-start space-x-2 text-xs font-bold uppercase tracking-wider text-brand-red">
+                                        <span class="w-2 h-2 rounded-full bg-brand-red animate-ping"></span>
+                                        <span>AO VIVO NO AR</span>
+                                        <span class="text-gray-500">•</span>
+                                        <span id="listenersCount" class="text-gray-300"><i class="fa-solid fa-users text-brand-red mr-1"></i> 1.482 ouvintes</span>
+                                    </div>
+                                    
+                                    <h2 id="currentShowTitle" class="text-xl sm:text-2xl font-extrabold text-white truncate">Gazeta FM Nacional Player</h2>
+                                    <p id="currentTrackInfo" class="text-sm text-gray-300 truncate">Tocando o melhor da sua companhia!</p>
+
+                                    <!-- Animated Wave visualizer -->
+                                    <div class="h-8 flex items-end justify-center md:justify-start gap-1 pt-2">
+                                        <div class="eq-bar w-1.5 bg-brand-red rounded-t h-3"></div>
+                                        <div class="eq-bar w-1.5 bg-brand-red rounded-t h-6"></div>
+                                        <div class="eq-bar w-1.5 bg-brand-red rounded-t h-2"></div>
+                                        <div class="eq-bar w-1.5 bg-brand-red rounded-t h-8"></div>
+                                        <div class="eq-bar w-1.5 bg-brand-red rounded-t h-5"></div>
+                                        <div class="eq-bar w-1.5 bg-brand-red rounded-t h-7"></div>
+                                        <div class="eq-bar w-1.5 bg-brand-red rounded-t h-4"></div>
+                                        <div class="eq-bar w-1.5 bg-brand-red rounded-t h-8"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Volume Control -->
+                                <div class="flex md:flex-col items-center gap-2 w-full md:w-auto border-t md:border-t-0 md:border-l border-brand-cardBorder pt-3 md:pt-0 md:pl-5">
+                                    <button onclick="toggleMute()" class="text-gray-400 hover:text-white transition">
+                                        <i id="volumeIcon" class="fa-solid fa-volume-high text-lg"></i>
+                                    </button>
+                                    <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.8" oninput="changeVolume(this.value)" class="w-full md:w-24 accent-brand-red cursor-pointer">
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="current-track-info-box">
-                        <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150&auto=format&fit=crop" class="current-track-img" alt="Capa">
-                        <div class="current-track-details">
-                            <p style="font-size: 11px; color: var(--text-muted);">Agora no ar</p>
-                            <h4>Gusttavo Lima</h4>
-                            <p>Bloqueado</p>
-                            <div class="track-progress-bar">
-                                <div class="track-progress-fill"></div>
-                            </div>
-                            <div class="track-time-labels">
-                                <span>03:24</span>
-                                <span>03:44</span>
-                            </div>
+                    <!-- Right Column: Slogan Banner -->
+                    <div class="lg:col-span-4 flex justify-center lg:justify-end">
+                        <div class="text-right space-y-1 hidden lg:block">
+                            <span class="text-4xl lg:text-5xl font-black italic tracking-tight text-white block">Música,</span>
+                            <span class="text-4xl lg:text-5xl font-black italic tracking-tight text-white block">Informação</span>
+                            <span class="text-3xl lg:text-4xl font-extrabold italic text-brand-red block text-glow">e muita Interação!</span>
                         </div>
-                    </div>
-
-                    <div class="vu-meter-box">
-                        <i class="fa-solid fa-signal" style="color: var(--btn-green); font-size: 16px;"></i>
-                        <span style="font-size: 9px; color: var(--text-muted);">Tempo no ar</span>
-                        <strong style="font-size: 12px; color: var(--btn-green);">02:48:17</strong>
                     </div>
                 </div>
+            </section>
 
-                <!-- PLAYLIST DA RÁDIO -->
-                <div class="playlist-panel">
-                    <div class="playlist-header-flex">
+            <!-- FEATURE CARDS GRID (IGUAL AO VISUAL ENVIADO NA FOTO) -->
+            <section class="max-w-7xl mx-auto px-4 lg:px-8 py-10">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    
+                    <!-- Card 1: Pedir Música -->
+                    <div onclick="openRequestModal()" class="bg-brand-red hover:bg-brand-redHover transition duration-300 rounded-2xl p-6 cursor-pointer text-center flex flex-col items-center justify-center space-y-3 group shadow-lg shadow-brand-red/20 transform hover:-translate-y-1">
+                        <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white text-2xl group-hover:scale-110 transition">
+                            <i class="fa-solid fa-music"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">Pedir Música</h3>
+                        <p class="text-xs text-white/80">Escolha sua música favorita</p>
+                    </div>
+
+                    <!-- Card 2: Chat -->
+                    <div onclick="switchTab('chat')" class="bg-brand-card hover:bg-brand-cardBorder border border-brand-cardBorder transition duration-300 rounded-2xl p-6 cursor-pointer text-center flex flex-col items-center justify-center space-y-3 group transform hover:-translate-y-1">
+                        <div class="w-12 h-12 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                            <i class="fa-solid fa-comments"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">Chat</h3>
+                        <p class="text-xs text-gray-400">Converse com a nossa equipe</p>
+                    </div>
+
+                    <!-- Card 3: Programação -->
+                    <div onclick="switchTab('programacao')" class="bg-brand-card hover:bg-brand-cardBorder border border-brand-cardBorder transition duration-300 rounded-2xl p-6 cursor-pointer text-center flex flex-col items-center justify-center space-y-3 group transform hover:-translate-y-1">
+                        <div class="w-12 h-12 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                            <i class="fa-solid fa-calendar-days"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">Programação</h3>
+                        <p class="text-xs text-gray-400">Confira nossa grade de horários</p>
+                    </div>
+
+                    <!-- Card 4: Equipe -->
+                    <div onclick="switchTab('equipe')" class="bg-brand-card hover:bg-brand-cardBorder border border-brand-cardBorder transition duration-300 rounded-2xl p-6 cursor-pointer text-center flex flex-col items-center justify-center space-y-3 group transform hover:-translate-y-1">
+                        <div class="w-12 h-12 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">Equipe</h3>
+                        <p class="text-xs text-gray-400">Conheça nossos locutores</p>
+                    </div>
+
+                    <!-- Card 5: Social Media Card -->
+                    <div class="bg-brand-card border border-brand-cardBorder rounded-2xl p-5 text-center flex flex-col justify-between space-y-3">
                         <div>
-                            <h4 style="font-size: 15px; font-weight: 800;"><i class="fa-solid fa-list-music" style="color: var(--primary-red);"></i> Playlist da Rádio</h4>
-                            <p style="font-size: 11px; color: var(--text-muted);">Músicas programadas e em reprodução</p>
+                            <span class="text-xs font-bold text-brand-red uppercase tracking-wider block">FIQUE LIGADO!</span>
+                            <p class="text-xs text-gray-300 mt-1">A Gazeta FM sempre com você, 24 horas por dia!</p>
                         </div>
-                        <button class="btn-add-music" onclick="alert('Abrir painel para adicionar música!')">
-                            <i class="fa-solid fa-plus"></i> Adicionar Música
+                        <div class="flex items-center justify-center gap-3 text-lg text-gray-300 pt-2">
+                            <a href="#" class="hover:text-brand-red transition"><i class="fa-brands fa-whatsapp"></i></a>
+                            <a href="#" class="hover:text-brand-red transition"><i class="fa-brands fa-instagram"></i></a>
+                            <a href="#" class="hover:text-brand-red transition"><i class="fa-brands fa-youtube"></i></a>
+                            <a href="#" class="hover:text-brand-red transition"><i class="fa-brands fa-tiktok"></i></a>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 2: PROGRAMAÇÃO -->
+        <div id="tab-programacao" class="tab-content hidden max-w-7xl mx-auto px-4 lg:px-8 py-10">
+            <div class="mb-8 border-b border-brand-cardBorder pb-4">
+                <h2 class="text-3xl font-black uppercase text-white">Grade de <span class="text-brand-red">Programação</span></h2>
+                <p class="text-gray-400 text-sm">Fique por dentro de todos os programas da Gazeta FM Nacional</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="scheduleGrid">
+                <!-- Program cards injected via JS -->
+            </div>
+        </div>
+
+        <!-- TAB 3: EQUIPE -->
+        <div id="tab-equipe" class="tab-content hidden max-w-7xl mx-auto px-4 lg:px-8 py-10">
+            <div class="mb-8 border-b border-brand-cardBorder pb-4">
+                <h2 class="text-3xl font-black uppercase text-white">Nossa <span class="text-brand-red">Equipe</span></h2>
+                <p class="text-gray-400 text-sm">Os locutores e DJs que comandam o seu dia a dia</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="teamGrid">
+                <!-- Team injected via JS -->
+            </div>
+        </div>
+
+        <!-- TAB 4: CHAT DOS OUVINTES -->
+        <div id="tab-chat" class="tab-content hidden max-w-4xl mx-auto px-4 lg:px-8 py-10">
+            <div class="bg-brand-card border border-brand-cardBorder rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-brand-cardBorder pb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-brand-red/20 text-brand-red flex items-center justify-center">
+                            <i class="fa-solid fa-comments text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-lg">Chat do Ouvinte em Tempo Real</h3>
+                            <p class="text-xs text-gray-400">Mande recados e interaja no ar!</p>
+                        </div>
+                    </div>
+                    <span class="text-xs bg-green-500/10 text-green-400 px-3 py-1 rounded-full border border-green-500/20 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        Chat Ativo
+                    </span>
+                </div>
+
+                <!-- Chat Messages Feed -->
+                <div id="chatFeed" class="h-80 overflow-y-auto space-y-3 p-2 bg-[#0d0d12] rounded-xl border border-brand-cardBorder/50">
+                    <!-- Messages injected dynamically -->
+                </div>
+
+                <!-- Input Form -->
+                <form onsubmit="sendChatMessage(event)" class="flex gap-2">
+                    <input type="text" id="chatUserName" placeholder="Seu nome" required class="w-1/3 bg-[#0a0a0c] border border-brand-cardBorder rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-brand-red">
+                    <input type="text" id="chatUserMsg" placeholder="Digite sua mensagem..." required class="w-2/3 bg-[#0a0a0c] border border-brand-cardBorder rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-brand-red">
+                    <button type="submit" class="bg-brand-red hover:bg-brand-redHover text-white px-5 py-2.5 rounded-xl font-bold transition flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 5: ESTÚDIO DO LOCUTOR (PAINEL COMPLETO PROTEGIDO) -->
+        <div id="tab-estudio" class="tab-content hidden max-w-7xl mx-auto px-4 lg:px-8 py-8">
+            <div class="flex items-center justify-between mb-6 bg-brand-card border border-brand-cardBorder p-4 rounded-2xl">
+                <div class="flex items-center space-x-3">
+                    <div class="w-3 h-3 rounded-full bg-red-600 animate-ping"></div>
+                    <h2 class="text-xl font-extrabold text-white">ESTÚDIO COMPLETO DE LOCUÇÃO DE ÁUDIO</h2>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button id="toggleOnAirBtn" onclick="toggleOnAirStatus()" class="px-4 py-2 rounded-xl text-xs font-black tracking-widest bg-brand-red text-white red-glow">
+                        ON AIR
+                    </button>
+                    <button onclick="switchTab('inicio')" class="text-xs bg-gray-800 text-gray-300 hover:text-white px-3 py-2 rounded-xl">
+                        Sair do Estúdio
+                    </button>
+                </div>
+            </div>
+
+            <!-- STUDIO GRID SYSTEM -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- MIXER DE ÁUDIO & MICROFONES -->
+                <div class="lg:col-span-4 bg-brand-card border border-brand-cardBorder rounded-2xl p-5 space-y-5">
+                    <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-[#e50914] fa-sliders text-brand-red"></i> Mesa de Som / Volumes
+                    </h3>
+
+                    <div class="space-y-4 text-xs">
+                        <!-- Mic 1 Slider -->
+                        <div>
+                            <div class="flex justify-between text-gray-300 font-semibold mb-1">
+                                <span>Microfone 1 (Principal)</span>
+                                <span id="mic1Val">80%</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="80" oninput="document.getElementById('mic1Val').innerText=this.value+'%'" class="w-full accent-brand-red">
+                        </div>
+
+                        <!-- Mic 2 Slider -->
+                        <div>
+                            <div class="flex justify-between text-gray-300 font-semibold mb-1">
+                                <span>Microfone 2 (Convidado)</span>
+                                <span id="mic2Val">50%</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="50" oninput="document.getElementById('mic2Val').innerText=this.value+'%'" class="w-full accent-brand-red">
+                        </div>
+
+                        <!-- Music Volume Slider -->
+                        <div>
+                            <div class="flex justify-between text-gray-300 font-semibold mb-1">
+                                <span>Volume Músicas/Trilha</span>
+                                <span id="musicVal">90%</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="90" oninput="document.getElementById('musicVal').innerText=this.value+'%'" class="w-full accent-brand-red">
+                        </div>
+
+                        <!-- Master Gain Slider -->
+                        <div>
+                            <div class="flex justify-between text-gray-300 font-semibold mb-1">
+                                <span>Master Output Gain</span>
+                                <span id="masterVal">100%</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="100" oninput="document.getElementById('masterVal').innerText=this.value+'%'" class="w-full accent-brand-red">
+                        </div>
+                    </div>
+
+                    <!-- Retorno de Áudio Gauge -->
+                    <div class="pt-3 border-t border-brand-cardBorder">
+                        <span class="text-xs font-semibold text-gray-400 block mb-2">VU Meter / Retorno de Saída</span>
+                        <div class="h-4 bg-[#0a0a0c] rounded-full overflow-hidden p-0.5 border border-brand-cardBorder flex items-center gap-1">
+                            <div class="h-full bg-green-500 rounded-sm w-1/2"></div>
+                            <div class="h-full bg-yellow-500 rounded-sm w-1/4"></div>
+                            <div class="h-full bg-brand-red rounded-sm w-1/6"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTOEIRA DE VINHETAS & EFEITOS (8 PADS) -->
+                <div class="lg:col-span-5 bg-brand-card border border-brand-cardBorder rounded-2xl p-5 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-brand-red"></i> Vinhetas & Efeitos Rápido
+                        </h3>
+                        <span class="text-[10px] bg-brand-red/20 text-brand-red px-2 py-0.5 rounded font-bold">8 PADS</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <button onclick="playSFX('vinheta1')" class="bg-[#1a1a24] hover:bg-brand-red transition p-4 rounded-xl border border-brand-cardBorder text-center group">
+                            <i class="fa-solid fa-bullhorn text-brand-red group-hover:text-white text-xl mb-1 block"></i>
+                            <span class="text-xs font-bold text-gray-200 group-hover:text-white block">Vinheta Gazeta</span>
+                        </button>
+                        <button onclick="playSFX('palmas')" class="bg-[#1a1a24] hover:bg-brand-red transition p-4 rounded-xl border border-brand-cardBorder text-center group">
+                            <i class="fa-solid fa-hands-clapping text-brand-red group-hover:text-white text-xl mb-1 block"></i>
+                            <span class="text-xs font-bold text-gray-200 group-hover:text-white block">Palmas</span>
+                        </button>
+                        <button onclick="playSFX('risada')" class="bg-[#1a1a24] hover:bg-brand-red transition p-4 rounded-xl border border-brand-cardBorder text-center group">
+                            <i class="fa-solid fa-face-laugh-squint text-brand-red group-hover:text-white text-xl mb-1 block"></i>
+                            <span class="text-xs font-bold text-gray-200 group-hover:text-white block">Risada</span>
+                        </button>
+                        <button onclick="playSFX('suspense')" class="bg-[#1a1a24] hover:bg-brand-red transition p-4 rounded-xl border border-brand-cardBorder text-center group">
+                            <i class="fa-solid fa-ghost text-brand-red group-hover:text-white text-xl mb-1 block"></i>
+                            <span class="text-xs font-bold text-gray-200 group-hover:text-white block">Suspense</span>
+                        </button>
+                        <button onclick="playSFX('airhorn')" class="bg-[#1a1a24] hover:bg-brand-red transition p-4 rounded-xl border border-brand-cardBorder text-center group">
+                            <i class="fa-solid fa-volume-high text-brand-red group-hover:text-white text-xl mb-1 block"></i>
+                            <span class="text-xs font-bold text-gray-200 group-hover:text-white block">Corneta / Horn</span>
+                        </button>
+                        <button onclick="playSFX('tambor')" class="bg-[#1a1a24] hover:bg-brand-red transition p-4 rounded-xl border border-brand-cardBorder text-center group">
+                            <i class="fa-solid fa-drum text-brand-red group-hover:text-white text-xl mb-1 block"></i>
+                            <span class="text-xs font-bold text-gray-200 group-hover:text-white block">Virada Tambor</span>
+                        </button>
+                        <button onclick="playSFX('transicao')" class="bg-[#1a1a24] hover:bg-brand-red transition p-4 rounded-xl border border-brand-cardBorder text-center group">
+                            <i class="fa-solid fa-wand-magic-sparkles text-brand-red group-hover:text-white text-xl mb-1 block"></i>
+                            <span class="text-xs font-bold text-gray-200 group-hover:text-white block">Efeito Sweep</span>
+                        </button>
+                        <button onclick="playSFX('applause')" class="bg-[#1a1a24] hover:bg-brand-red transition p-4 rounded-xl border border-brand-cardBorder text-center group">
+                            <i class="fa-solid fa-crown text-brand-red group-hover:text-white text-xl mb-1 block"></i>
+                            <span class="text-xs font-bold text-gray-200 group-hover:text-white block">Vinheta Top</span>
                         </button>
                     </div>
-
-                    <table class="playlist-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Capa</th>
-                                <th>Título</th>
-                                <th>Artista</th>
-                                <th>Duração</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><b>1</b></td>
-                                <td><img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100" class="song-mini-thumb"></td>
-                                <td><b>Bloqueado</b></td>
-                                <td>Gusttavo Lima</td>
-                                <td>03:44</td>
-                                <td>
-                                    <button style="background:none; border:none; color:var(--primary-red); cursor:pointer; margin-right:8px;"><i class="fa-solid fa-play"></i></button>
-                                    <button style="background:none; border:none; color:var(--text-muted); cursor:pointer; margin-right:8px;"><i class="fa-solid fa-forward"></i></button>
-                                    <button style="background:none; border:none; color:#ff4444; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>2</td>
-                                <td><img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100" class="song-mini-thumb"></td>
-                                <td>Nosso Quadro</td>
-                                <td>Ana Castela</td>
-                                <td>03:20</td>
-                                <td>
-                                    <button style="background:none; border:none; color:var(--text-main); cursor:pointer; margin-right:8px;"><i class="fa-solid fa-play"></i></button>
-                                    <button style="background:none; border:none; color:var(--text-muted); cursor:pointer; margin-right:8px;"><i class="fa-solid fa-forward"></i></button>
-                                    <button style="background:none; border:none; color:#ff4444; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>3</td>
-                                <td><img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=100" class="song-mini-thumb"></td>
-                                <td>Faz de Conta</td>
-                                <td>Zé Neto & Cristiano</td>
-                                <td>03:18</td>
-                                <td>
-                                    <button style="background:none; border:none; color:var(--text-main); cursor:pointer; margin-right:8px;"><i class="fa-solid fa-play"></i></button>
-                                    <button style="background:none; border:none; color:var(--text-muted); cursor:pointer; margin-right:8px;"><i class="fa-solid fa-forward"></i></button>
-                                    <button style="background:none; border:none; color:#ff4444; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
 
-                <!-- VINHETAS / EFEITOS SONOROS (10 PADS) -->
-                <div class="effects-panel">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <h4 style="font-size: 14px; font-weight: 800;"><i class="fa-solid fa-bolt" style="color: var(--primary-red);"></i> Vinhetas / Efeitos Sonoros</h4>
-                        <span style="font-size: 11px; color: var(--text-muted);">Selecione e toque rapidamente</span>
-                    </div>
+                <!-- GERENCIADOR DE PEDIDOS E CONVIDADOS -->
+                <div class="lg:col-span-3 bg-brand-card border border-brand-cardBorder rounded-2xl p-5 space-y-4">
+                    <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-inbox text-brand-red"></i> Pedidos dos Ouvintes
+                    </h3>
 
-                    <div class="effects-grid-10">
-                        <div class="effect-pad-card" onclick="playEffect('Risos')"><i class="fa-solid fa-face-laugh"></i><h5>Risos</h5><span>00:07</span></div>
-                        <div class="effect-pad-card" onclick="playEffect('Palmas')"><i class="fa-solid fa-hands-clapping"></i><h5>Palmas</h5><span>00:06</span></div>
-                        <div class="effect-pad-card" onclick="playEffect('Sino')"><i class="fa-solid fa-bell"></i><h5>Sino</h5><span>00:05</span></div>
-                        <div class="effect-pad-card" onclick="playEffect('Sirene')"><i class="fa-solid fa-triangle-exclamation"></i><h5>Sirene</h5><span>00:08</span></div>
-                        <div class="effect-pad-card" onclick="playEffect('Torcida')"><i class="fa-solid fa-users"></i><h5>Torcida</h5><span>00:10</span></div>
-                        <div class="effect-pad-card" onclick="playEffect('Telefone')"><i class="fa-solid fa-phone"></i><h5>Telefone</h5><span>00:06</span></div>
-                        <div class="effect-pad-card" onclick="playEffect('Buzina')"><i class="fa-solid fa-bullhorn"></i><h5>Buzina</h5><span>00:05</span></div>
-                        <div class="effect-pad-card" onclick="playEffect('Corrido')"><i class="fa-solid fa-music"></i><h5>Corrido</h5><span>00:07</span></div>
-                        <div class="effect-pad-card" onclick="playEffect('Explosão')"><i class="fa-solid fa-bomb"></i><h5>Explosão</h5><span>00:06</span></div>
-                        <div class="effect-pad-card" onclick="playEffect('Vinheta Geral')"><i class="fa-solid fa-radio"></i><h5>Geral</h5><span>00:12</span></div>
+                    <div id="studioSongRequests" class="space-y-2 h-64 overflow-y-auto pr-1">
+                        <!-- Song requests from audience -->
                     </div>
                 </div>
 
-                <!-- CONTROLES RÁPIDOS & ÚLTIMAS MÚSICAS -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div class="quick-controls-panel">
-                        <h4 style="font-size: 14px; font-weight: 800;"><i class="fa-solid fa-sliders" style="color: var(--primary-red);"></i> Controles Rápidos</h4>
-                        <div class="quick-buttons-grid">
-                            <button class="btn-qc-green" onclick="alert('Transmissão iniciada!')"><i class="fa-solid fa-play"></i> Iniciar</button>
-                            <button class="btn-qc-red" onclick="alert('Transmissão finalizada!')"><i class="fa-solid fa-stop"></i> Finalizar</button>
-                            <button class="btn-qc-dark" onclick="alert('Corte comercial acionado!')"><i class="fa-solid fa-rectangle-ad"></i> Comercial</button>
-                            <button class="btn-qc-dark" onclick="alert('Retomando música...')"><i class="fa-solid fa-rotate-right"></i> Retomar</button>
-                        </div>
-                    </div>
+            </div>
+        </div>
 
-                    <div class="quick-controls-panel">
-                        <h4 style="font-size: 14px; font-weight: 800;"><i class="fa-solid fa-clock-rotate-left" style="color: var(--primary-red);"></i> Últimas Músicas</h4>
-                        <div class="last-played-carousel">
-                            <div class="last-played-mini"><img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=80"><h6>Péssimo</h6><p>14:28</p></div>
-                            <div class="last-played-mini"><img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=80"><h6>Saudade</h6><p>14:24</p></div>
-                            <div class="last-played-mini"><img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=80"><h6>Brincadeira</h6><p>14:21</p></div>
-                            <div class="last-played-mini"><img src="https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=80"><h6>Deixa Eu</h6><p>14:17</p></div>
-                            <div class="last-played-mini"><img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=80"><h6>Nosso</h6><p>14:13</p></div>
-                        </div>
-                    </div>
+    </main>
+
+    <!-- BOTTOM TICKER STRIP (ÚLTIMAS MÚSICAS TOCADAS - CONFORME FOTO) -->
+    <footer class="bg-[#070709] border-t border-brand-cardBorder py-3 px-4 lg:px-8 text-xs text-gray-400">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            
+            <div class="flex items-center space-x-2 text-brand-red font-bold flex-shrink-0">
+                <i class="fa-solid fa-wave-square animate-pulse"></i>
+                <span class="uppercase tracking-wider">Últimas músicas tocadas</span>
+            </div>
+
+            <div class="ticker-wrap text-gray-300 text-xs">
+                <div class="ticker-move" id="tickerContent">
+                    Gustavo Lima - Bloqueado &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; Henrique & Juliano - Arranhão &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; Ana Castela - Solteiro Forçado &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; Maiara & Maraisa - Medo Bobo &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; Luan Santana - Meio Termo
                 </div>
             </div>
 
-            <!-- COLUNA DIREITA (OUVINTES ONLINE & CHAT DA RÁDIO) -->
-            <div class="dashboard-col-right">
-                <!-- OUVINTES ONLINE -->
-                <div class="right-sidebar-box">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h4 style="font-size: 13px; font-weight: 800;"><i class="fa-solid fa-users" style="color: var(--primary-red);"></i> Ouvintes Online</h4>
-                        <span style="font-size: 11px; color: var(--btn-green); font-weight: 700;">● 124 ouvintes</span>
-                    </div>
+            <button onclick="openAllTracksModal()" class="bg-brand-card hover:bg-brand-cardBorder text-gray-200 border border-brand-cardBorder px-3 py-1 rounded-lg flex-shrink-0 text-[11px] font-semibold transition">
+                Ver todas
+            </button>
+        </div>
+    </footer>
 
-                    <div>
-                        <div class="listeners-list-item">
-                            <div><b>LucasRJ</b><br><span style="color:var(--text-muted); font-size:10px;">São José do Rio Preto - SP</span></div>
-                            <i class="fa-solid fa-circle" style="font-size: 6px; color: var(--btn-green);"></i>
-                        </div>
-                        <div class="listeners-list-item">
-                            <div><b>AnaSilva</b><br><span style="color:var(--text-muted); font-size:10px;">Mirassol - SP</span></div>
-                            <i class="fa-solid fa-circle" style="font-size: 6px; color: var(--btn-green);"></i>
-                        </div>
-                        <div class="listeners-list-item">
-                            <div><b>PedroChavoso</b><br><span style="color:var(--text-muted); font-size:10px;">Bady Bassitt - SP</span></div>
-                            <i class="fa-solid fa-circle" style="font-size: 6px; color: var(--btn-green);"></i>
-                        </div>
-                        <div class="listeners-list-item">
-                            <div><b>JulianaV</b><br><span style="color:var(--text-muted); font-size:10px;">Uchoa - SP</span></div>
-                            <i class="fa-solid fa-circle" style="font-size: 6px; color: var(--btn-green);"></i>
-                        </div>
-                        <div class="listeners-list-item">
-                            <div><b>MarcioSantos</b><br><span style="color:var(--text-muted); font-size:10px;">Potirendaba - SP</span></div>
-                            <i class="fa-solid fa-circle" style="font-size: 6px; color: var(--btn-green);"></i>
-                        </div>
-                    </div>
+
+    <!-- MODALS SECTION -->
+
+    <!-- MODAL 1: LOGIN DO LOCUTOR (EXATAMENTE COMO NA FOTO DIREITA) -->
+    <div id="locutorLoginModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card border border-brand-cardBorder rounded-2xl max-w-md w-full p-8 shadow-2xl relative space-y-6 red-glow">
+            
+            <button onclick="closeLocutorLoginModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Brand Logo Center -->
+            <div class="text-center space-y-2">
+                <div class="w-12 h-12 rounded-full bg-brand-red flex items-center justify-center mx-auto shadow-lg shadow-brand-red/40">
+                    <i class="fa-solid fa-microphone-lines text-white text-2xl"></i>
                 </div>
-
-                <!-- CHAT DA RÁDIO -->
-                <div class="right-sidebar-box" style="display: flex; flex-direction: column; flex-grow: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <h4 style="font-size: 13px; font-weight: 800;"><i class="fa-solid fa-comments" style="color: var(--primary-red);"></i> Chat da Rádio</h4>
-                        <span style="font-size: 10px; color: var(--text-muted);">Ao vivo</span>
-                    </div>
-
-                    <div class="chat-messages-container" id="chat-feed">
-                        <div class="chat-msg-item">
-                            <b>LucasRJ <span style="font-size:9px; color:var(--text-muted);">14:32</span></b>
-                            <p style="color: #d1d5db; margin-top: 2px;">Manda um abraço pra minha mãe que tá ouvindo de São José do Rio Preto! 💙</p>
-                        </div>
-                        <div class="chat-msg-item">
-                            <b>AnaSilva <span style="font-size:9px; color:var(--text-muted);">14:31</span></b>
-                            <p style="color: #d1d5db; margin-top: 2px;">Amo essa rádio! Vocês são demais!</p>
-                        </div>
-                        <div class="chat-msg-item">
-                            <b>PedroChavoso <span style="font-size:9px; color:var(--text-muted);">14:30</span></b>
-                            <p style="color: #d1d5db; margin-top: 2px;">Pode tocar o Modão do Gusttavo Lima?</p>
-                        </div>
-                    </div>
-
-                    <form class="chat-input-box" onsubmit="sendChatMessage(event)">
-                        <input type="text" id="chat-msg-input" placeholder="Digite sua mensagem..." required>
-                        <button type="submit" class="chat-send-btn"><i class="fa-solid fa-paper-plane"></i></button>
-                    </form>
-                </div>
+                <h2 class="text-xl font-extrabold text-white">GAZETA FM <span class="text-brand-red">NACIONAL</span></h2>
+                <h3 class="text-base font-bold text-gray-200">Painel do Locutor</h3>
+                <p class="text-xs text-gray-400">Faça seu login para acessar o painel de locução.</p>
             </div>
-        </main>
 
-        <!-- RODAPÉ DO PAINEL -->
-        <footer class="studio-footer-bar">
-            <span>GAZETA FM NACIONAL PLAYER - Painel do Locutor</span>
-            <span style="color: var(--btn-green);"><i class="fa-solid fa-signal"></i> Conexão estável</span>
-            <span id="footer-date">10/06/2026 14:32</span>
-        </footer>
-    </div>
-
-    <!-- MODAL DE LOGIN SEGURO (ADMIN / ADMIN) -->
-    <div class="modal-overlay active" id="login-modal">
-        <div class="login-box">
-            <div class="logo-icon-red" style="margin: 0 auto 15px auto;">G</div>
-            <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 5px;">Painel do Locutor</h2>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 25px;">Faça seu login para acessar o painel de locução.</p>
-
-            <form onsubmit="handleLoginSubmit(event)">
-                <div style="margin-bottom: 15px; text-align: left;">
-                    <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 5px;">Usuário</label>
-                    <input type="text" id="login-user-input" value="admin" required style="width: 100%; background: #0a0c10; border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; color: white; outline: none;">
+            <!-- Login Form -->
+            <form onsubmit="handleLocutorLogin(event)" class="space-y-4">
+                <div>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                        <input type="text" id="loginUser" required placeholder="Usuário" class="w-full bg-[#0a0a0c] border border-brand-cardBorder rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-red">
+                    </div>
                 </div>
-                <div style="margin-bottom: 20px; text-align: left;">
-                    <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 5px;">Senha</label>
-                    <input type="password" id="login-pass-input" value="admin" required style="width: 100%; background: #0a0c10; border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; color: white; outline: none;">
+
+                <div>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                            <i class="fa-solid fa-lock"></i>
+                        </span>
+                        <input type="password" id="loginPass" required placeholder="Senha" class="w-full bg-[#0a0a0c] border border-brand-cardBorder rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-red">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 cursor-pointer" onclick="togglePasswordVisibility()">
+                            <i id="eyeIcon" class="fa-solid fa-eye"></i>
+                        </span>
+                    </div>
                 </div>
-                <button type="submit" style="width: 100%; background: var(--primary-red); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer;">Entrar</button>
+
+                <button type="submit" class="w-full bg-brand-red hover:bg-brand-redHover text-white py-3 rounded-xl font-bold transition red-glow">
+                    Entrar
+                </button>
             </form>
 
-            <button onclick="closeModal('login-modal')" style="width: 100%; background: transparent; color: var(--text-muted); border: none; margin-top: 15px; font-size: 12px; cursor: pointer;">Acessar como Ouvinte</button>
+            <div class="relative flex py-1 items-center">
+                <div class="flex-grow border-t border-brand-cardBorder"></div>
+                <span class="flex-shrink mx-4 text-xs text-gray-500">ou</span>
+                <div class="flex-grow border-t border-brand-cardBorder"></div>
+            </div>
+
+            <button onclick="closeLocutorLoginModal()" class="w-full bg-[#0a0a0c] hover:bg-[#15151e] border border-brand-cardBorder text-gray-300 py-3 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-headphones"></i> Acessar como Ouvinte
+            </button>
+
+            <p class="text-center text-xs text-gray-500 hover:underline cursor-pointer">Esqueceu sua senha?</p>
         </div>
     </div>
 
-    <script>
-        function handleLoginSubmit(e) {
-            e.preventDefault();
-            const u = document.getElementById('login-user-input').value;
-            const p = document.getElementById('login-pass-input').value;
+    <!-- MODAL 2: PEDIR MÚSICA -->
+    <div id="requestModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card border border-brand-cardBorder rounded-2xl max-w-lg w-full p-6 space-y-5 relative">
+            <button onclick="closeRequestModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
 
-            if(u === 'admin' && p === 'admin') {
-                document.getElementById('login-modal').classList.remove('active');
-                document.getElementById('public-view').style.display = 'none';
-                document.getElementById('studio-view').classList.add('active');
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-brand-red/20 text-brand-red flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-music"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white">Faça seu Pedido Musical</h3>
+                    <p class="text-xs text-gray-400">Sua música vai tocar na Gazeta FM Nacional!</p>
+                </div>
+            </div>
+
+            <form onsubmit="submitSongRequest(event)" class="space-y-4 text-sm">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Seu Nome</label>
+                    <input type="text" id="reqName" required placeholder="Ex: João da Silva" class="w-full bg-[#0a0a0c] border border-brand-cardBorder rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-red">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Nome do Artista / Cantor</label>
+                    <input type="text" id="reqArtist" required placeholder="Ex: Henrique & Juliano" class="w-full bg-[#0a0a0c] border border-brand-cardBorder rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-red">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Música Escolhida</label>
+                    <input type="text" id="reqSong" required placeholder="Ex: Arranhão" class="w-full bg-[#0a0a0c] border border-brand-cardBorder rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-red">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Oferecimento / Recado (Opcional)</label>
+                    <textarea id="reqMessage" rows="2" placeholder="Ofereço para toda minha família..." class="w-full bg-[#0a0a0c] border border-brand-cardBorder rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-red"></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-brand-red hover:bg-brand-redHover text-white py-3 rounded-xl font-bold transition">
+                    Enviar Pedido ao Locutor
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        // --- AUDIO STATE & WEB AUDIO API SYNTHESIS ---
+        let isPlaying = false;
+        let isMuted = false;
+        let isOnAir = true;
+        
+        // Demo Web Audio Stream
+        const audioStream = new Audio('https://stream.zeno.fm/f3wvbbqmdg8uv'); // High Quality Stream Sample
+        audioStream.volume = 0.8;
+
+        // Web Audio Synthesizer for SFX Vinhetas
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSFX(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'vinheta1' || type === 'applause') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            } else if (type === 'airhorn') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.setValueAtTime(400, now + 0.1);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
             } else {
-                alert('Usuário ou senha incorretos! Use usuario: admin e senha: admin');
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(520, now);
+                osc.frequency.exponentialRampToValueAtTime(260, now + 0.2);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+
+            alertModal('SFX Disparado: ' + type.toUpperCase());
+        }
+
+        function togglePlayRadio() {
+            const playIcon = document.getElementById('playIcon');
+            const mainBtn = document.getElementById('mainPlayBtn');
+
+            if (!isPlaying) {
+                audioStream.play().then(() => {
+                    isPlaying = true;
+                    playIcon.className = 'fa-solid fa-pause';
+                    mainBtn.classList.add('animate-pulse');
+                }).catch(err => {
+                    // Fallback visual simulation if stream blocks
+                    isPlaying = true;
+                    playIcon.className = 'fa-solid fa-pause';
+                    mainBtn.classList.add('animate-pulse');
+                });
+            } else {
+                audioStream.pause();
+                isPlaying = false;
+                playIcon.className = 'fa-solid fa-play ml-1';
+                mainBtn.classList.remove('animate-pulse');
             }
         }
 
-        function exitStudioPanel() {
-            document.getElementById('studio-view').classList.remove('active');
-            document.getElementById('public-view').style.display = 'block';
-            document.getElementById('login-modal').classList.add('active');
+        function changeVolume(val) {
+            audioStream.volume = val;
+            const volumeIcon = document.getElementById('volumeIcon');
+            if (val == 0) {
+                volumeIcon.className = 'fa-solid fa-volume-xmark text-lg text-red-500';
+            } else if (val < 0.5) {
+                volumeIcon.className = 'fa-solid fa-volume-low text-lg';
+            } else {
+                volumeIcon.className = 'fa-solid fa-volume-high text-lg';
+            }
         }
 
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
+        function toggleMute() {
+            isMuted = !isMuted;
+            audioStream.muted = isMuted;
+            document.getElementById('volumeIcon').className = isMuted ? 'fa-solid fa-volume-xmark text-lg text-red-500' : 'fa-solid fa-volume-high text-lg';
         }
 
-        function openModal(id) {
-            document.getElementById(id).classList.add('active');
+        // --- NAVIGATION & TABS ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById('tab-' + tabId);
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.getAttribute('data-target') === tabId) {
+                    btn.classList.add('text-white', 'font-bold');
+                } else {
+                    btn.classList.remove('text-white', 'font-bold');
+                }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function playEffect(name) {
-            alert('Tocando efeito sonoro: ' + name);
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // --- DATA INITIALIZATION ---
+        const scheduleData = [
+            { time: "06:00 - 09:00", title: "Café com Notícia", DJ: "Carlos Eduardo", active: false },
+            { time: "09:00 - 12:00", title: "Gazeta Hits ao Vivo", DJ: "Mariana Silva", active: true },
+            { time: "12:00 - 14:00", title: "Almoço Sertanejo", DJ: "Fernando & Sorocaba", active: false },
+            { time: "14:00 - 18:00", title: "Tarde Total Gazeta", DJ: "Lucas Mendes", active: false },
+            { time: "18:00 - 22:00", title: "As Melhores da Região", DJ: "Patrícia Amorim", active: false },
+            { time: "22:00 - 02:00", title: "Madrugada Gazeta FM", DJ: "AutoPlay", active: false }
+        ];
+
+        const teamData = [
+            { name: "Mariana Silva", role: "Locutora Principal", photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop" },
+            { name: "Carlos Eduardo", role: "Jornalismo & Notícias", photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&auto=format&fit=crop" },
+            { name: "Lucas Mendes", role: "DJ & Animador", photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop" },
+            { name: "Patrícia Amorim", role: "Programa Noturno", photo: "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=400&auto=format&fit=crop" }
+        ];
+
+        let songRequests = [
+            { name: "Rodrigo Santos", song: "Bloqueado", artist: "Gustavo Lima", time: "10:14" },
+            { name: "Amanda Costa", song: "Solteiro Forçado", artist: "Ana Castela", time: "10:22" }
+        ];
+
+        function renderSchedule() {
+            const container = document.getElementById('scheduleGrid');
+            container.innerHTML = scheduleData.map(item => `
+                <div class="bg-brand-card border ${item.active ? 'border-brand-red red-glow' : 'border-brand-cardBorder'} p-5 rounded-2xl space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold ${item.active ? 'text-brand-red' : 'text-gray-400'}">${item.time}</span>
+                        ${item.active ? '<span class="bg-brand-red text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">No Ar Agora</span>' : ''}
+                    </div>
+                    <h4 class="text-lg font-bold text-white">${item.title}</h4>
+                    <p class="text-xs text-gray-400">Locutor: <span class="text-gray-200">${item.DJ}</span></p>
+                </div>
+            `).join('');
+        }
+
+        function renderTeam() {
+            const container = document.getElementById('teamGrid');
+            container.innerHTML = teamData.map(member => `
+                <div class="bg-brand-card border border-brand-cardBorder rounded-2xl overflow-hidden group">
+                    <img src="${member.photo}" alt="${member.name}" class="w-full h-48 object-cover group-hover:scale-105 transition duration-500">
+                    <div class="p-4 space-y-1">
+                        <h4 class="font-bold text-white text-base">${member.name}</h4>
+                        <p class="text-xs text-brand-red font-medium">${member.role}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderSongRequestsInStudio() {
+            const container = document.getElementById('studioSongRequests');
+            container.innerHTML = songRequests.map((req, idx) => `
+                <div class="bg-[#0a0a0c] border border-brand-cardBorder p-3 rounded-xl text-xs space-y-1">
+                    <div class="flex justify-between text-gray-400">
+                        <span class="font-bold text-white">${req.name}</span>
+                        <span>${req.time}</span>
+                    </div>
+                    <p class="text-brand-red font-semibold">${req.artist} - ${req.song}</p>
+                    <div class="flex gap-2 pt-1">
+                        <button onclick="acceptRequest(${idx})" class="bg-green-600/20 text-green-400 border border-green-600/30 px-2 py-0.5 rounded text-[10px]">Tocar</button>
+                        <button onclick="removeRequest(${idx})" class="bg-red-600/20 text-red-400 border border-red-600/30 px-2 py-0.5 rounded text-[10px]">Excluir</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function acceptRequest(idx) {
+            const req = songRequests[idx];
+            alertModal(`Música "${req.song}" colocada na fila de reprodução!`);
+            removeRequest(idx);
+        }
+
+        function removeRequest(idx) {
+            songRequests.splice(idx, 1);
+            renderSongRequestsInStudio();
+        }
+
+        // --- CHAT SYSTEM ---
+        const chatMessages = [
+            { user: "Lucas", text: "Mandem um abraço para São Paulo!", time: "10:20" },
+            { user: "Carla", text: "Melhor rádio do Brasil! Toca Jorge & Mateus!", time: "10:24" }
+        ];
+
+        function renderChat() {
+            const feed = document.getElementById('chatFeed');
+            feed.innerHTML = chatMessages.map(msg => `
+                <div class="bg-brand-card p-3 rounded-xl border border-brand-cardBorder/40 space-y-0.5">
+                    <div class="flex justify-between items-center text-[11px]">
+                        <span class="font-bold text-brand-red">${msg.user}</span>
+                        <span class="text-gray-500">${msg.time}</span>
+                    </div>
+                    <p class="text-xs text-gray-200">${msg.text}</p>
+                </div>
+            `).join('');
+            feed.scrollTop = feed.scrollHeight;
         }
 
         function sendChatMessage(e) {
             e.preventDefault();
-            const input = document.getElementById('chat-msg-input');
-            const feed = document.getElementById('chat-feed');
-            if(input.value.trim() !== '') {
-                feed.innerHTML += `
-                    <div class="chat-msg-item">
-                        <b>João Silva (Locutor) <span style="font-size:9px; color:var(--primary-red);">Agora</span></b>
-                        <p style="color: #ffffff; margin-top: 2px;">${input.value}</p>
-                    </div>
-                `;
-                input.value = '';
-                feed.scrollTop = feed.scrollHeight;
+            const name = document.getElementById('chatUserName').value;
+            const msg = document.getElementById('chatUserMsg').value;
+            chatMessages.push({ user: name, text: msg, time: "Agora" });
+            document.getElementById('chatUserMsg').value = '';
+            renderChat();
+        }
+
+        // --- MODAL CONTROLS ---
+        function openLocutorLoginModal() {
+            document.getElementById('locutorLoginModal').classList.remove('hidden');
+        }
+
+        function closeLocutorLoginModal() {
+            document.getElementById('locutorLoginModal').classList.add('hidden');
+        }
+
+        function togglePasswordVisibility() {
+            const pass = document.getElementById('loginPass');
+            const icon = document.getElementById('eyeIcon');
+            if (pass.type === 'password') {
+                pass.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                pass.type = 'password';
+                icon.className = 'fa-solid fa-eye';
             }
         }
+
+        function handleLocutorLogin(e) {
+            e.preventDefault();
+            closeLocutorLoginModal();
+            switchTab('estudio');
+            alertModal('Bem-vindo ao Estúdio Gazeta FM Nacional!');
+        }
+
+        function openRequestModal() {
+            document.getElementById('requestModal').classList.remove('hidden');
+        }
+
+        function closeRequestModal() {
+            document.getElementById('requestModal').classList.add('hidden');
+        }
+
+        function submitSongRequest(e) {
+            e.preventDefault();
+            const name = document.getElementById('reqName').value;
+            const artist = document.getElementById('reqArtist').value;
+            const song = document.getElementById('reqSong').value;
+
+            songRequests.unshift({ name, artist, song, time: "Agora" });
+            renderSongRequestsInStudio();
+
+            closeRequestModal();
+            alertModal('Pedido enviado com sucesso ao locutor no ar!');
+        }
+
+        function toggleOnAirStatus() {
+            isOnAir = !isOnAir;
+            const btn = document.getElementById('toggleOnAirBtn');
+            if (isOnAir) {
+                btn.className = 'px-4 py-2 rounded-xl text-xs font-black tracking-widest bg-brand-red text-white red-glow';
+                btn.innerText = 'ON AIR';
+            } else {
+                btn.className = 'px-4 py-2 rounded-xl text-xs font-black tracking-widest bg-gray-700 text-gray-300';
+                btn.innerText = 'OFF AIR';
+            }
+        }
+
+        function openAllTracksModal() {
+            alertModal('Últimas Músicas: 1. Gustavo Lima - Bloqueado | 2. Henrique & Juliano - Arranhão | 3. Ana Castela - Solteiro Forçado | 4. Maiara & Maraisa - Medo Bobo');
+        }
+
+        function alertModal(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-20 right-5 bg-brand-red text-white px-5 py-3 rounded-xl shadow-2xl z-50 text-xs font-bold border border-white/20 animate-bounce';
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Initialize App
+        window.onload = function() {
+            renderSchedule();
+            renderTeam();
+            renderChat();
+            renderSongRequestsInStudio();
+        };
     </script>
 </body>
 </html>
+```
