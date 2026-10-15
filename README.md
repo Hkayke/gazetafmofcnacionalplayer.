@@ -26,8 +26,7 @@ Hospede como serviço Node.js (por exemplo, Render Web Service), usando a raiz d
 - Variáveis de ambiente:
   - `LOCUTOR_USER`: usuário do painel (ex.: admin)
   - `LOCUTOR_PASSWORD`: senha forte e exclusiva do locutor; obrigatória
-  - `ALLOWED_ORIGIN`: opcional, origem pública permitida para Socket.IO
-
+  
 Aponte o domínio do site para esse serviço Node.js. GitHub Pages sozinho não executa o servidor Socket.IO; para a transmissão ao vivo, o HTML e o servidor devem ser servidos pelo serviço Node.
 
 ## Rede e áudio
