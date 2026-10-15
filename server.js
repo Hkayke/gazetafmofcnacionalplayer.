@@ -74,6 +74,11 @@ io.on('connection', socket => {
     for (const listenerId of listeners) socket.emit('listener:ready', { listenerId });
   });
 
+  socket.on('host:request-listeners', () => {
+    if (!socket.data.isHost || hostSocketId !== socket.id) return;
+    for (const listenerId of listeners) socket.emit('listener:ready', { listenerId });
+  });
+
   socket.on('host:go-live', () => {
     if (!socket.data.isHost || hostSocketId !== socket.id) return;
     isLive = true;
