@@ -917,6 +917,7 @@
         let broadcastMasterGainNode = null, radioIsLive = false;
         let micBroadcastGainNode = null, musicBroadcastGainNode = null, liveStreamAudio = null;
         const peerConnections = new Map();
+        const pendingIceCandidates = new Map();
         let hostSocketId = null;
 
         function connectRadioSocket() {
@@ -932,17 +933,39 @@
             radioSocket.on('radio:stopped', () => { radioIsLive = false; appState.isLive = false; updateGlobalUI(); updateConnectionStatus('Locutor conectado — transmissão pausada'); });
             radioSocket.on('radio:host-offline', () => { hostSocketId = null; radioIsLive = false; appState.isLive = false; updateGlobalUI(); updateConnectionStatus('Locutor offline'); if(liveStreamAudio) liveStreamAudio.srcObject=null; });
             radioSocket.on('webrtc:offer', async d => {
-                try { const pc=createListenerPeer(d.hostId); await pc.setRemoteDescription(d.sdp); const answer=await pc.createAnswer(); await pc.setLocalDescription(answer); await waitForIceGathering(pc); radioSocket.emit('webrtc:answer',{targetId:d.hostId,sdp:pc.localDescription}); }
-                catch(e){ console.error('Falha ao conectar ao áudio ao vivo:',e); }
+                try {
+                    const pc = createListenerPeer(d.hostId);
+                    await pc.setRemoteDescription(d.sdp);
+                    await flushPendingIce(d.hostId, pc);
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+                    radioSocket.emit('webrtc:answer', { targetId: d.hostId, sdp: pc.localDescription });
+                } catch (e) {
+                    console.error('Falha ao conectar ao áudio ao vivo:', e);
+                    updateConnectionStatus('Falha ao conectar o áudio: ' + (e?.message || 'erro WebRTC'));
+                }
             });
             radioSocket.on('webrtc:answer', async d => {
                 const pc = peerConnections.get(d.fromId);
                 if (pc && pc.signalingState !== 'stable') {
-                    try { await pc.setRemoteDescription(d.sdp); }
-                    catch (e) { console.error('Erro ao aplicar resposta WebRTC:', e); updateConnectionStatus('Erro ao negociar áudio'); }
+                    try {
+                        await pc.setRemoteDescription(d.sdp);
+                        await flushPendingIce(d.fromId, pc);
+                    } catch (e) { console.error('Erro ao aplicar resposta WebRTC:', e); updateConnectionStatus('Erro ao negociar áudio'); }
                 }
             });
-            // ICE candidates are included in SDP after waitForIceGathering(); no trickle candidates needed.
+            radioSocket.on('webrtc:ice', async d => {
+                if (!d?.candidate) return;
+                const pc = peerConnections.get(d.fromId);
+                if (!pc || !pc.remoteDescription) {
+                    const queued = pendingIceCandidates.get(d.fromId) || [];
+                    queued.push(d.candidate);
+                    pendingIceCandidates.set(d.fromId, queued);
+                    return;
+                }
+                try { await pc.addIceCandidate(d.candidate); }
+                catch (e) { console.error('Erro ao adicionar candidato ICE:', e); }
+            });
             radioSocket.on('chat:history', d => { appState.publicChat=d.chat||[]; appState.studioChat=[...(d.chat||[]),...(d.requests||[])]; renderPublicChat();renderStudioChat(); });
             radioSocket.on('chat:new', item => { appState.publicChat.push(item);appState.studioChat.push({...item,type:'chat'});appState.publicChat=appState.publicChat.slice(-150);appState.studioChat=appState.studioChat.slice(-300);renderPublicChat();renderStudioChat(); });
             radioSocket.on('request:new', item => { appState.studioChat.push({...item,type:'request'});appState.studioChat=appState.studioChat.slice(-300);renderStudioChat(); });
@@ -977,9 +1000,11 @@
                 ]
             });
             peerConnections.set(remoteId, pc);
-            // The offer/answer is sent only after ICE gathering completes, so its SDP
-            // already contains candidates. Sending trickle candidates before the SDP
-            // caused the other side to discard them because no peer existed yet.
+            pc.onicecandidate = event => {
+                if (event.candidate && radioSocket) {
+                    radioSocket.emit('webrtc:ice', { targetId: remoteId, candidate: event.candidate });
+                }
+            };
             pc.onconnectionstatechange = () => {
                 updateConnectionStatus('Áudio: ' + pc.connectionState);
                 if (['failed', 'closed'].includes(pc.connectionState)) closePeer(remoteId);
@@ -1014,7 +1039,19 @@
             pc.ontrack=e=>{if(liveStreamAudio){liveStreamAudio.srcObject=e.streams[0]||new MediaStream([e.track]);liveStreamAudio.play().catch(()=>showToast('Toque em Ouvir Música para liberar o áudio ao vivo.'));}updateConnectionStatus('Recebendo transmissão ao vivo');};
             return pc;
         }
-        function closePeer(id){const pc=peerConnections.get(id);if(pc){pc.ontrack=null;pc.close();peerConnections.delete(id);}}
+        async function flushPendingIce(id, pc) {
+            const queued = pendingIceCandidates.get(id) || [];
+            pendingIceCandidates.delete(id);
+            for (const candidate of queued) {
+                try { await pc.addIceCandidate(candidate); }
+                catch (e) { console.error('Erro ao aplicar ICE pendente:', e); }
+            }
+        }
+        function closePeer(id) {
+            const pc = peerConnections.get(id);
+            if (pc) { pc.ontrack = null; pc.close(); peerConnections.delete(id); }
+            pendingIceCandidates.delete(id);
+        }
 
         async function toggleMicrophone() {
             const btn = document.getElementById('mic-toggle-btn');
