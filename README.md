@@ -1,27 +1,36 @@
-# GAZETA FM NACIONAL PLAYER — protótipo atualizado
+# Gazeta FM Nacional Player
 
-Projeto front-end responsivo com identidade visual preta/vermelha e as áreas de ouvinte, login demonstrativo e painel de locução.
+Player web da Gazeta FM Nacional Roleplay com transmissão de áudio ao vivo via WebRTC e chat/pedidos de música em tempo real.
 
-## Arquivos incluídos
-- `index.html` — página pública, login e páginas/abas administrativas.
-- `styles.css` — visual responsivo.
-- `app.js` — navegação e interações locais.
+## Como funciona
+- O locutor autentica no painel e libera o microfone pelo navegador.
+- O áudio do microfone e a música selecionada no Deck são mixados no navegador e enviados aos ouvintes por WebRTC.
+- O retorno local da voz e o retorno local da música podem ser ligados/desligados separadamente.
+- Chat e pedidos de música são compartilhados em tempo real pelo servidor.
+- O histórico de chat/pedidos fica em memória e é limpo quando o servidor reinicia.
 
-## Como testar
-1. Extraia o ZIP mantendo os três arquivos juntos dentro da pasta `gazeta-fm-site`.
-2. Abra `index.html` em um navegador moderno. Para permitir microfone, use HTTPS ou `localhost` quando exigido pelo navegador.
-3. Clique em **Painel do Locutor** no rodapé.
-4. Credenciais apenas para demonstração local: `admin` / `gazeta123`.
+## Executar localmente
+Requer Node.js 18 ou superior.
 
-## Páginas e áreas presentes
-- Início do ouvinte com player e status demonstrativo.
-- Programação, equipe e Mais Tocadas na página pública.
-- Formulário de pedido de música.
-- Login de demonstração e painel administrativo.
-- Painel da locução com playlist local, controle de reprodução, volume e fade.
-- Efeitos sonoros demonstrativos e solicitação de permissão de microfone.
-- Edição local de programação, equipe, Mais Tocadas, nome do locutor e link do Discord.
-- Caixa local para visualizar pedidos enviados neste mesmo navegador.
+```bash
+npm install
+LOCUTOR_USER=admin LOCUTOR_PASSWORD='coloque-uma-senha-forte-aqui' npm start
+```
 
-## Limitações importantes
-Esta é uma prévia front-end, não uma rádio online em produção. O login é demonstrativo e não protege dados em um servidor. Os dados editados são salvos no armazenamento local do navegador e não sincronizam entre dispositivos. A abertura do microfone apenas solicita acesso local: não envia voz aos ouvintes. O status ONLINE/OFFLINE é manual e demonstrativo. Chat em tempo real, pedidos remotos, autenticação segura, banco de dados e transmissão real exigem backend e servidor de streaming (por exemplo, Icecast/SHOUTcast ou serviço equivalente).
+Abra http://localhost:3000. Para usar o microfone fora de localhost, o site precisa estar servido por HTTPS.
+
+## Hospedar
+Hospede como serviço Node.js (por exemplo, Render Web Service), usando a raiz deste repositório:
+- Build command: `npm install`
+- Start command: `npm start`
+- Variáveis de ambiente:
+  - `LOCUTOR_USER`: usuário do painel (ex.: admin)
+  - `LOCUTOR_PASSWORD`: senha forte e exclusiva do locutor; obrigatória
+  - `ALLOWED_ORIGIN`: opcional, origem pública permitida para Socket.IO
+
+Aponte o domínio do site para esse serviço Node.js. GitHub Pages sozinho não executa o servidor Socket.IO; para a transmissão ao vivo, o HTML e o servidor devem ser servidos pelo serviço Node.
+
+## Rede e áudio
+A conexão WebRTC usa servidores STUN públicos para tentar atravessar NAT. Algumas redes exigem um servidor TURN próprio para conectar todos os ouvintes de forma confiável. Para muitos ouvintes, considere um servidor de mídia SFU (como mediasoup/LiveKit), porque a conexão direta consome banda de upload do computador do locutor proporcionalmente ao número de ouvintes.
+
+Use fones no retorno de voz para evitar eco/realimentação. O navegador precisa de permissão de microfone e de uma interação do usuário para iniciar o áudio.
