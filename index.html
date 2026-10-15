@@ -935,8 +935,14 @@
                 try { const pc=createListenerPeer(d.hostId); await pc.setRemoteDescription(d.sdp); const answer=await pc.createAnswer(); await pc.setLocalDescription(answer); await waitForIceGathering(pc); radioSocket.emit('webrtc:answer',{targetId:d.hostId,sdp:pc.localDescription}); }
                 catch(e){ console.error('Falha ao conectar ao áudio ao vivo:',e); }
             });
-            radioSocket.on('webrtc:answer', async d => { const pc=peerConnections.get(d.fromId); if(pc && pc.signalingState!=='stable') try{await pc.setRemoteDescription(d.sdp)}catch(e){console.error(e)} });
-            radioSocket.on('webrtc:ice', async d => { const pc=peerConnections.get(d.fromId); if(pc&&d.candidate)try{await pc.addIceCandidate(d.candidate)}catch(e){console.error(e)} });
+            radioSocket.on('webrtc:answer', async d => {
+                const pc = peerConnections.get(d.fromId);
+                if (pc && pc.signalingState !== 'stable') {
+                    try { await pc.setRemoteDescription(d.sdp); }
+                    catch (e) { console.error('Erro ao aplicar resposta WebRTC:', e); updateConnectionStatus('Erro ao negociar áudio'); }
+                }
+            });
+            // ICE candidates are included in SDP after waitForIceGathering(); no trickle candidates needed.
             radioSocket.on('chat:history', d => { appState.publicChat=d.chat||[]; appState.studioChat=[...(d.chat||[]),...(d.requests||[])]; renderPublicChat();renderStudioChat(); });
             radioSocket.on('chat:new', item => { appState.publicChat.push(item);appState.studioChat.push({...item,type:'chat'});appState.publicChat=appState.publicChat.slice(-150);appState.studioChat=appState.studioChat.slice(-300);renderPublicChat();renderStudioChat(); });
             radioSocket.on('request:new', item => { appState.studioChat.push({...item,type:'request'});appState.studioChat=appState.studioChat.slice(-300);renderStudioChat(); });
@@ -964,10 +970,25 @@
             return audioContext;
         }
         function makePeerConnection(remoteId) {
-            const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]});
-            peerConnections.set(remoteId,pc);
-            pc.onicecandidate=e=>{if(e.candidate&&radioSocket)radioSocket.emit('webrtc:ice',{targetId:remoteId,candidate:e.candidate});};
-            pc.onconnectionstatechange=()=>{if(['failed','closed'].includes(pc.connectionState))closePeer(remoteId);};
+            const pc = new RTCPeerConnection({
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            });
+            peerConnections.set(remoteId, pc);
+            // The offer/answer is sent only after ICE gathering completes, so its SDP
+            // already contains candidates. Sending trickle candidates before the SDP
+            // caused the other side to discard them because no peer existed yet.
+            pc.onconnectionstatechange = () => {
+                updateConnectionStatus('Áudio: ' + pc.connectionState);
+                if (['failed', 'closed'].includes(pc.connectionState)) closePeer(remoteId);
+            };
+            pc.oniceconnectionstatechange = () => {
+                if (pc.iceConnectionState === 'failed') {
+                    updateConnectionStatus('Conexão de áudio falhou. Pode ser necessário configurar TURN no servidor.');
+                }
+            };
             return pc;
         }
         async function createHostPeer(listenerId) {
