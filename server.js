@@ -79,6 +79,13 @@ io.on('connection', socket => {
     for (const listenerId of listeners) socket.emit('listener:ready', { listenerId });
   });
 
+  socket.on('host:program-config', data => {
+    if (!socket.data.isHost || hostSocketId !== socket.id) return;
+    const locutorName = cleanText(data?.locutorName, 100);
+    const showTitle = cleanText(data?.showTitle, 120);
+    io.emit('radio:program-config', { locutorName, showTitle });
+  });
+
   socket.on('host:now-playing', data => {
     if (!socket.data.isHost || hostSocketId !== socket.id) return;
     const name = cleanText(data?.name, 160);
