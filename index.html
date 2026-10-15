@@ -806,21 +806,49 @@
             e.preventDefault();
             const u = document.getElementById('login-user').value.trim();
             const p = document.getElementById('login-pass').value;
-            if (!radioSocket || !radioSocket.connected) {
-                alert('Servidor de transmissão indisponível. Tente novamente em instantes.');
+            const authenticate = () => {
+                if (!radioSocket || !radioSocket.connected) {
+                    alert('Não foi possível conectar ao servidor da rádio. Verifique a conexão e tente novamente.');
+                    return;
+                }
+                radioSocket.emit('host:authenticate', { username: u, password: p }, result => {
+                    if (!result?.ok) { alert(result?.message || 'Usuário ou senha incorretos.'); return; }
+                    isHostAuthenticated = true;
+                    appState.isLive = false;
+                    persistState();
+                    closeLoginModal();
+                    ensureAudioGraph();
+                    updateGlobalUI();
+                    switchView('studio');
+                    showToast('Login efetuado com sucesso!');
+                });
+            };
+            if (radioSocket && radioSocket.connected) {
+                authenticate();
                 return;
             }
-            radioSocket.emit('host:authenticate', { username: u, password: p }, result => {
-                if (!result?.ok) { alert(result?.message || 'Usuário ou senha incorretos.'); return; }
-                isHostAuthenticated = true;
-                appState.isLive = false;
-                persistState();
-                closeLoginModal();
-                ensureAudioGraph();
-                updateGlobalUI();
-                switchView('studio');
-                showToast('Login efetuado com sucesso!');
-            });
+            if (typeof io !== 'function') {
+                alert('O sistema de conexão da rádio não carregou. Atualize a página e tente novamente.');
+                return;
+            }
+            connectRadioSocket();
+            showToast('Conectando ao servidor da rádio…');
+            const socketToWait = radioSocket;
+            let finished = false;
+            const finishWait = () => {
+                if (finished) return;
+                finished = true;
+                socketToWait.off('connect', onConnected);
+                socketToWait.off('connect_error', onError);
+            };
+            const onConnected = () => { finishWait(); authenticate(); };
+            const onError = () => {
+                finishWait();
+                alert('Não foi possível conectar ao servidor da rádio. Aguarde alguns segundos, atualize a página e tente novamente.');
+            };
+            socketToWait.once('connect', onConnected);
+            socketToWait.once('connect_error', onError);
+            socketToWait.connect();
         }
 
         function handleLogout() {
